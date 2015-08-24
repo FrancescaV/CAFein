@@ -947,7 +947,7 @@ main (void)
 		fitC1coeffs, csiRel_model, matA, matB, matC, matD, matCR, matR, matdR, matT, matM, matDummySizeR, 
 		matDummySizeR_2, matDummySizeT, matDummySizeT_2, vecDummySizeR2, vecDummySizeT2, vecDummySizeR, 
 		vecDummySizeR_3, permDummySizeT, inwardOutward, interpol_rij, Rij_calc_ad, csi_calc_ad, 
-		startInterpol_rij, endInterpol_rij, nonAdiabatic, tidesFlag};
+		startInterpol_rij, endInterpol_rij, nonAdiabatic, tidesFlag, PFuncs, fitPcoeffs};
 	
 	params_integrator_adiabatic_struct params_eigenfunc_adiabatic = {csiIn_force, csiFin_force, rowsRic, meshModel, omega_r_noDim, 
 		omega_i_noDim, deg_l_dbl, VgFuncs, AstarFuncs, UFuncs, c1Funcs, VFuncs, delADFuncs, delFuncs, VtFuncs, ksFuncs, 
@@ -955,7 +955,7 @@ main (void)
 		fitC1coeffs, csiRel_model, matA, matB, 
 		matC, matD, matCR, matR, matdR, matTtot, matM, matDummySizeR, matDummySizeR_2, matDummySizeT, 
 		matDummySizeT_2, vecDummySizeR2, vecDummySizeT2, vecDummySizeR, vecDummySizeR_3, permDummySizeT,
-		inwardOutward, interpol_rij, Rij_calc_ad, csi_calc_ad, startInterpol_rij, endInterpol_rij, nonAdiabatic, tidesFlag};
+		inwardOutward, interpol_rij, Rij_calc_ad, csi_calc_ad, startInterpol_rij, endInterpol_rij, nonAdiabatic, tidesFlag, PFuncs, fitPcoeffs};
 	
 	params_integrator_R_nonAd_struct params_eigenfreq_nonAdiabatic = {rowsRic, meshModel, omega_r_noDim, omega_i_noDim, deg_l_dbl, VgFuncs, AstarFuncs, UFuncs, c1Funcs, 
 		VFuncs, delADFuncs, delFuncs, VtFuncs, ksFuncs, epsADFuncs, epsSFuncs, c2Funcs, 
@@ -964,7 +964,7 @@ main (void)
 		fitEpsADcoeffs, fitEpsScoeffs, fitC2coeffs, fitC3coeffs, fitC4coeffs, fitdlnLR_dlnrCoeffs, 
 		csiRel_model, matA, matB, matC, matD, matCR,matR, matdR, matT, matM, matDummySizeR, 
 		matDummySizeR_2, matDummySizeT, matDummySizeT_2, vecDummySizeR2, vecDummySizeT2, vecDummySizeR, 
-		vecDummySizeR_3, permDummySizeT, inwardOutward, nonAdiabatic, tidesFlag};
+		vecDummySizeR_3, permDummySizeT, inwardOutward, nonAdiabatic, tidesFlag, PFuncs, fitPcoeffs};
 	
 	/************************************************************************************
 	 ***  If adiabatic I use the integrator that handles both R and V at the same time.
@@ -2221,7 +2221,7 @@ main (void)
 						fitC2coeffs, fitC3coeffs, fitC4coeffs, fitdlnLR_dlnrCoeffs, csiRel_model, matA, matB, matC, matD, matCR, matR, matdR, 
 						matTtot, matM, matDummySizeR, matDummySizeR_2, matDummySizeT, matDummySizeT_2, vecDummySizeR2, vecDummySizeT2, vecDummySizeR, 
 						vecDummySizeR_3, permDummySizeT, inwardOutward, interpol_rij, sizeRij_calc, Rij_calc, csi_calc, fitRij_calcCoeffs, Rij_calcFuncs, 
-						startInterpol_rij, endInterpol_rij, nonAdiabatic, tidesFlag};
+						startInterpol_rij, endInterpol_rij, nonAdiabatic, tidesFlag, PFuncs, fitPcoeffs};
 					
 					params_integrator_V_nonAd_rkf45_struct params_eigenfunc_nonAdiabatic_rkf45 = {csiIn_force, csiFin_force, rowsRic, meshModel, omega_r_noDim, 
 						omega_i_noDim, deg_l_dbl, VgFuncs, AstarFuncs, UFuncs, c1Funcs, VFuncs, delADFuncs, delFuncs, VtFuncs, ksFuncs, 
@@ -2230,7 +2230,7 @@ main (void)
 						fitC2coeffs, fitC3coeffs, fitC4coeffs, fitdlnLR_dlnrCoeffs, csiRel_model, matA, matB, matC, matD, matCR, matR, matdR, 
 						matTtot, matM, matDummySizeR, matDummySizeR_2, matDummySizeT, matDummySizeT_2, vecDummySizeR2, vecDummySizeT2, vecDummySizeR, 
 						vecDummySizeR_3, permDummySizeT, inwardOutward, interpol_rij, sizeRij_calc, Rij_calc, csi_calc, 
-						startInterpol_rij, endInterpol_rij, nonAdiabatic, tidesFlag, rRel_and_rkf45_state, Rij_from_rkf45_state, size_rkf45_state};
+						startInterpol_rij, endInterpol_rij, nonAdiabatic, tidesFlag, rRel_and_rkf45_state, Rij_from_rkf45_state, size_rkf45_state, PFuncs, fitPcoeffs};
 					
 					gsl_odeiv_system sys_Riccati_R_eigenfunc_nonAdiabatic       = {func_Riccati_Vonly, jac_Riccati_Vonly, dimensionODE_V, &params_eigenfunc_nonAdiabatic};
 					gsl_odeiv_system sys_Riccati_R_eigenfunc_nonAdiabatic_rkf45 = {func_Riccati_Vonly_rkf45, jac_Riccati_Vonly, dimensionODE_V, &params_eigenfunc_nonAdiabatic_rkf45};		

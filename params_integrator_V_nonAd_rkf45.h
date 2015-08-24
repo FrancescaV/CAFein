@@ -36,6 +36,8 @@ typedef struct
 	
 	int size_rkf45_state_struct;
 	
+    double *PFuncs_struct, **fitPcoeffs_struct;
+
 }params_integrator_V_nonAd_rkf45_struct;
 
 

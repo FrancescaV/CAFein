@@ -57,14 +57,14 @@ using namespace std;
  ************ 
  **************************************************************************************/
 
-void create_Riccati_ABCD_new(double csi_func, double Vg_func,double Astar_func, double U_func,double l_func,						 
+void create_Riccati_ABCD_new(double csi_func, double P_func, double Vg_func,double Astar_func, double U_func,double l_func,
 							 double omega_r_func, double omega_i_func, double Vt_func, double V_func, double del_func, double delad_func, 							
 							 double ks_func, double c1_func, double c2_func, double c3_func, double c4_func, double epsAd_func, double dlnLR_dlnr_func, 
 							 double epsS_func, gsl_matrix *A_func, gsl_matrix *B_func, gsl_matrix *C_func, gsl_matrix *D_func, int rowsRic_func, 
 							 int inWard_outWard_func, int nonAdiabatic_func, int tidesFlag_func)
 {
 	
-	double wR2 = omega_r_func*omega_r_func, 
+	double wR2 = omega_r_func*omega_r_func,
 	wI2 = omega_i_func*omega_i_func, 
 	wRwI = omega_i_func*omega_r_func, 
 	llp1 = l_func*(1.0 + l_func), 
@@ -75,100 +75,106 @@ void create_Riccati_ABCD_new(double csi_func, double Vg_func,double Astar_func, 
 	delV = del_func*V_func,
 	wI2pwR2_2 = (wI2 + wR2)*(wI2 + wR2);
 	int i = 0, j = 0;
+    double changeVariables = csi_func;
 
+    //FIXME, change csti with P everywhere!!!!!
+//    changeVariables = -V_func*P_func;
+    
+    
 	gsl_matrix_set_zero(A_func);
 	gsl_matrix_set_zero(B_func);
 	gsl_matrix_set_zero(C_func);
 	gsl_matrix_set_zero(D_func);
 
 	
+    
 	/*In the purely adiabatic case omega_i = 0, and the 2x2 matrices below
 	 boil down to the purely adiabatic case...*/
-	gsl_matrix_set(A_func,0,0,(-1.0 - l_func + Vg_func)/csi_func);
-	gsl_matrix_set(A_func,0,1,(-Vg_func + (llp1*(-wI2 + wR2)/(c1_func*wI2pwR2_2)))/csi_func);		
-	gsl_matrix_set(A_func,1,0,(-Astar_func + c1_func*(-wI2 + wR2))/csi_func);
-	gsl_matrix_set(A_func,1,1,(3.0 + Astar_func - l_func - U_func)/csi_func);
+	gsl_matrix_set(A_func,0,0,(-1.0 - l_func + Vg_func)/changeVariables);
+	gsl_matrix_set(A_func,0,1,(-Vg_func + (llp1*(-wI2 + wR2)/(c1_func*wI2pwR2_2)))/changeVariables);		
+	gsl_matrix_set(A_func,1,0,(-Astar_func + c1_func*(-wI2 + wR2))/changeVariables);
+	gsl_matrix_set(A_func,1,1,(3.0 + Astar_func - l_func - U_func)/changeVariables);
 	
-	gsl_matrix_set(B_func,0,0,Vg_func/csi_func);
+	gsl_matrix_set(B_func,0,0,Vg_func/changeVariables);
 	gsl_matrix_set(B_func,0,1,0.0);
-	gsl_matrix_set(B_func,1,0,-Astar_func/csi_func);
+	gsl_matrix_set(B_func,1,0,-Astar_func/changeVariables);
 	gsl_matrix_set(B_func,1,1,0.0);		
 
 	
 	gsl_matrix_set(C_func,0,0,0.0);
 	gsl_matrix_set(C_func,0,1,0.0);
-	gsl_matrix_set(C_func,1,0,(Astar_func*U_func)/csi_func);
-	gsl_matrix_set(C_func,1,1,(U_func*Vg_func)/csi_func);		
+	gsl_matrix_set(C_func,1,0,(Astar_func*U_func)/changeVariables);
+	gsl_matrix_set(C_func,1,1,(U_func*Vg_func)/changeVariables);		
 	
-	gsl_matrix_set(D_func,0,0,(3.0 - l_func - U_func)/csi_func);
-	gsl_matrix_set(D_func,0,1, 1.0/csi_func);
-	gsl_matrix_set(D_func,1,0,(llp1 - U_func*Vg_func)/csi_func);
-	gsl_matrix_set(D_func,1,1,(2.0 - l_func - U_func)/csi_func);			
+	gsl_matrix_set(D_func,0,0,(3.0 - l_func - U_func)/changeVariables);
+	gsl_matrix_set(D_func,0,1, 1.0/changeVariables);
+	gsl_matrix_set(D_func,1,0,(llp1 - U_func*Vg_func)/changeVariables);
+	gsl_matrix_set(D_func,1,1,(2.0 - l_func - U_func)/changeVariables);			
 
 	if(nonAdiabatic_func == 0 && tidesFlag_func)
 	{
-		gsl_matrix_set(A_func,2,2,(2.0 - l_func)/csi_func);
-		gsl_matrix_set(D_func,2,2,(2.0 - l_func)/csi_func);		
+		gsl_matrix_set(A_func,2,2,(2.0 - l_func)/changeVariables);
+		gsl_matrix_set(D_func,2,2,(2.0 - l_func)/changeVariables);		
 	}
 	
 	if(nonAdiabatic_func)
 	{
 		if(tidesFlag_func)
 		{
-			gsl_matrix_set(A_func,0,2,Vt_func/csi_func);
-			gsl_matrix_set(A_func,1,2,Vt_func/csi_func);
-			gsl_matrix_set(A_func,2,0,V_func*(c2_func + 4.0*del_func + delad_func*(-4.0 + U_func - c1wR2))/csi_func);			
-			gsl_matrix_set(A_func,2,1,(-c2V - (delMdelAd*llp1*V_func)/(c1wR2))/csi_func);			
-			gsl_matrix_set(A_func,2,2,(2.0 - l_func - del_func*(-4.0 + ks_func)*V_func)/csi_func);
-			gsl_matrix_set(A_func,3,3,(2.0 - l_func)/csi_func);
+			gsl_matrix_set(A_func,0,2,Vt_func/changeVariables);
+			gsl_matrix_set(A_func,1,2,Vt_func/changeVariables);
+			gsl_matrix_set(A_func,2,0,V_func*(c2_func + 4.0*del_func + delad_func*(-4.0 + U_func - c1wR2))/changeVariables);			
+			gsl_matrix_set(A_func,2,1,(-c2V - (delMdelAd*llp1*V_func)/(c1wR2))/changeVariables);			
+			gsl_matrix_set(A_func,2,2,(2.0 - l_func - del_func*(-4.0 + ks_func)*V_func)/changeVariables);
+			gsl_matrix_set(A_func,3,3,(2.0 - l_func)/changeVariables);
 			
-			gsl_matrix_set(B_func,2, 0, c2V/csi_func);			
-			gsl_matrix_set(B_func,2, 1, deladV/csi_func);			
-			gsl_matrix_set(B_func,2, 2, -delV/csi_func);
+			gsl_matrix_set(B_func,2, 0, c2V/changeVariables);			
+			gsl_matrix_set(B_func,2, 1, deladV/changeVariables);			
+			gsl_matrix_set(B_func,2, 2, -delV/changeVariables);
 						
-			gsl_matrix_set(C_func,1,2,-U_func*Vt_func/csi_func);
-			gsl_matrix_set(C_func,2,0,((delad_func*llp1 - del_func*(llp1 + c3_func*epsAd_func*V_func))/del_func)/csi_func);
-			gsl_matrix_set(C_func,2,1,((-(c1wR2*delad_func*llp1) + c3_func*del_func*(llp1 + c1wR2*epsAd_func*V_func))/(c1wR2*del_func))/csi_func);
-			gsl_matrix_set(C_func,2,2,(-((llp1 - c3_func*delV*epsS_func)/delV))/csi_func);
-			gsl_matrix_set(C_func,2,6,c4_func*omega_r_func/csi_func);
+			gsl_matrix_set(C_func,1,2,-U_func*Vt_func/changeVariables);
+			gsl_matrix_set(C_func,2,0,((delad_func*llp1 - del_func*(llp1 + c3_func*epsAd_func*V_func))/del_func)/changeVariables);
+			gsl_matrix_set(C_func,2,1,((-(c1wR2*delad_func*llp1) + c3_func*del_func*(llp1 + c1wR2*epsAd_func*V_func))/(c1wR2*del_func))/changeVariables);
+			gsl_matrix_set(C_func,2,2,(-((llp1 - c3_func*delV*epsS_func)/delV))/changeVariables);
+			gsl_matrix_set(C_func,2,6,c4_func*omega_r_func/changeVariables);
 			
-			gsl_matrix_set(D_func,2,0,((delad_func*llp1 - c3_func*del_func*V_func*epsAd_func)/del_func)/csi_func);
-			gsl_matrix_set(D_func,2,2,(2 - dlnLR_dlnr_func - l_func)/csi_func);
-			gsl_matrix_set(D_func,3,3,(2.0 - l_func)/csi_func);
+			gsl_matrix_set(D_func,2,0,((delad_func*llp1 - c3_func*del_func*V_func*epsAd_func)/del_func)/changeVariables);
+			gsl_matrix_set(D_func,2,2,(2 - dlnLR_dlnr_func - l_func)/changeVariables);
+			gsl_matrix_set(D_func,3,3,(2.0 - l_func)/changeVariables);
 		}//if(tidesFlag_func)
 		else
 		{
-			gsl_matrix_set(A_func,0,2,Vt_func/csi_func);
-			gsl_matrix_set(A_func,0,4,((2.0*llp1*wRwI)/(c1_func*wI2pwR2_2))/csi_func);			
-			gsl_matrix_set(A_func,1,2,(Vt_func)/csi_func);
-			gsl_matrix_set(A_func,1,3,(-2.0*c1_func*wRwI)/csi_func);
-			gsl_matrix_set(A_func,2,0,(V_func*(c2_func + 4.0*del_func + delad_func*(-4.0 + U_func + c1_func*(wI2 - wR2))))/csi_func);
+			gsl_matrix_set(A_func,0,2,Vt_func/changeVariables);
+			gsl_matrix_set(A_func,0,4,((2.0*llp1*wRwI)/(c1_func*wI2pwR2_2))/changeVariables);			
+			gsl_matrix_set(A_func,1,2,(Vt_func)/changeVariables);
+			gsl_matrix_set(A_func,1,3,(-2.0*c1_func*wRwI)/changeVariables);
+			gsl_matrix_set(A_func,2,0,(V_func*(c2_func + 4.0*del_func + delad_func*(-4.0 + U_func + c1_func*(wI2 - wR2))))/changeVariables);
 			gsl_matrix_set(A_func,2,1,(-c2V + (delMdelAd*l_func*(1.0 + l_func)*V_func*(wI2 - wR2))/
-									   (c1_func*wI2pwR2_2))/csi_func);
-			gsl_matrix_set(A_func,2,2,(2.0 - l_func + del_func*(4.0 - ks_func)*V_func)/csi_func);
-			gsl_matrix_set(A_func,2,3,(2.0*c1_func*deladV*wRwI)/csi_func);
-			gsl_matrix_set(A_func,2,4,((-2.0*delMdelAd*llp1*V_func*wRwI)/(c1_func*wI2pwR2_2))/csi_func);
+									   (c1_func*wI2pwR2_2))/changeVariables);
+			gsl_matrix_set(A_func,2,2,(2.0 - l_func + del_func*(4.0 - ks_func)*V_func)/changeVariables);
+			gsl_matrix_set(A_func,2,3,(2.0*c1_func*deladV*wRwI)/changeVariables);
+			gsl_matrix_set(A_func,2,4,((-2.0*delMdelAd*llp1*V_func*wRwI)/(c1_func*wI2pwR2_2))/changeVariables);
 			
-			gsl_matrix_set(B_func,2,0,c2V/csi_func);
-			gsl_matrix_set(B_func,2,1,deladV/csi_func);
-			gsl_matrix_set(B_func,2,2,-delV/csi_func);
+			gsl_matrix_set(B_func,2,0,c2V/changeVariables);
+			gsl_matrix_set(B_func,2,1,deladV/changeVariables);
+			gsl_matrix_set(B_func,2,2,-delV/changeVariables);
 			
 			
-			gsl_matrix_set(C_func,1,2,(-(U_func*Vt_func))/csi_func);	
-			gsl_matrix_set(C_func,2,0,(-((delMdelAd*llp1)/del_func) - c3_func*epsAd_func*V_func)/csi_func);
+			gsl_matrix_set(C_func,1,2,(-(U_func*Vt_func))/changeVariables);	
+			gsl_matrix_set(C_func,2,0,(-((delMdelAd*llp1)/del_func) - c3_func*epsAd_func*V_func)/changeVariables);
 			gsl_matrix_set(C_func,2,1,((-(delad_func*llp1) + c3_func*del_func*epsAd_func*V_func)/del_func - 
-									   (c3_func*llp1*(wI2 - wR2))/(c1_func*wI2pwR2_2))/csi_func);
+									   (c3_func*llp1*(wI2 - wR2))/(c1_func*wI2pwR2_2))/changeVariables);
 			
 			gsl_matrix_set(C_func,2,2,((-(llp1) + c3_func*del_func*epsS_func*V_func + 
-										c4_func*delV*omega_i_func)/delV)/csi_func);
+										c4_func*delV*omega_i_func)/delV)/changeVariables);
 			
 			gsl_matrix_set(C_func,2,3,0.0);
-			gsl_matrix_set(C_func,2,4,((2.0*c3_func*llp1*wRwI)/(c1_func*wI2pwR2_2))/csi_func);		
-			gsl_matrix_set(C_func,2,5,(c4_func*omega_r_func)/csi_func);	
+			gsl_matrix_set(C_func,2,4,((2.0*c3_func*llp1*wRwI)/(c1_func*wI2pwR2_2))/changeVariables);		
+			gsl_matrix_set(C_func,2,5,(c4_func*omega_r_func)/changeVariables);	
 			
 			
-			gsl_matrix_set(D_func,2,0,((delad_func*llp1)/del_func - c3_func*epsAd_func*V_func)/csi_func);
-			gsl_matrix_set(D_func,2,2,(2.0 - dlnLR_dlnr_func - l_func)/csi_func);
+			gsl_matrix_set(D_func,2,0,((delad_func*llp1)/del_func - c3_func*epsAd_func*V_func)/changeVariables);
+			gsl_matrix_set(D_func,2,2,(2.0 - dlnLR_dlnr_func - l_func)/changeVariables);
 		}
 		
 //		/*Finish A, B, C, D using simmetry properties*/
@@ -190,7 +196,7 @@ void create_Riccati_ABCD_new(double csi_func, double Vg_func,double Astar_func, 
 }//create_Riccati_ABCD_new
 
 
-void permute_Riccati_ABCD(double csi_func, double Vg_func,double Astar_func, double U_func,double c1_func, double l_func, 
+void permute_Riccati_ABCD(double csi_func, double P_func, double Vg_func,double Astar_func, double U_func,double c1_func, double l_func,
 						  double omega_r_func, double omega_i_func, double Vt_func, double V_func, double del_func, double delad_func, 							
 						  double ks_func, double c2_func, double c3_func, double c4_func, double epsAd_func, double dlnLR_dlnr_func, 
 						  double epsS_func, 
@@ -214,7 +220,7 @@ void permute_Riccati_ABCD(double csi_func, double Vg_func,double Astar_func, dou
 	 *** With y divided by r^(l-2)	
 	 ***/
 	
-		create_Riccati_ABCD_new(csi_func, Vg_func, Astar_func, U_func, l_func,						 
+		create_Riccati_ABCD_new(csi_func, P_func, Vg_func, Astar_func, U_func, l_func,
 								omega_r_func, omega_i_func, Vt_func, V_func, del_func, delad_func, 							
 								ks_func, c1_func, c2_func, c3_func, c4_func, epsAd_func, dlnLR_dlnr_func, 
 								epsS_func, A_func, B_func, C_func, D_func, rowsRic_func, inWard_outWard_func,

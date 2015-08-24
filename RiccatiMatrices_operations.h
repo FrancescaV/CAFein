@@ -1,11 +1,7 @@
-void create_Riccati_ABCD_new(double ,double ,double ,double ,double ,double, double, double, double, double, double,
+void create_Riccati_ABCD_new(double, double, double, double ,double ,double ,double ,double ,double, double, double, double, double, double,
 							 double, double, double, double, double, double, double, double, 
 							 gsl_matrix *, gsl_matrix *, gsl_matrix *, gsl_matrix *, int, int, int, int);
-void create_Riccati_ABCD_new_increaseMagnitude(double ,double ,double ,double ,double ,double, double, double, double, 
-											   double, double,double, double, double, double, double, double, double, 
-											   double, gsl_matrix *, gsl_matrix *, gsl_matrix *, gsl_matrix *, int, int, 
-											   int, int, double);
-void permute_Riccati_ABCD(double, double,double, double,double, double,double, double, double, double, double, double, double, 							
+void permute_Riccati_ABCD(double, double, double, double, double,double, double,double, double, double, double, double, double, double,
 						  double, double, double, double, double, double, 
 						  gsl_matrix *, gsl_matrix *, gsl_matrix *, gsl_matrix *, gsl_matrix *, 
 						  gsl_matrix *,gsl_matrix *, gsl_matrix *, gsl_vector *, gsl_permutation *, int, int, int, int);
