@@ -1,0 +1,109 @@
+1  0	       				|adiabatic == 1, non-adiabatic == 0
+
+********************************** Accuracies eigenfrequencies ****************************************
+
+2  2.0      				|l = order of the mode.
+3  1.0e-13 					|h: initial timestep integration egenfreq.
+4  1.0e-13 					|eps_abs: absolute accuracy integration egenfreq. see note below
+5  1.0e-13 					|eps_rel: relative accuracy integration egenfreq. see note below
+6  1.0e16					|LimitToRiccati: max/min value allowed for Riccati determinant R. TO BE SET. See note below
+
+****************************************************************************************************************
+******** detailed Rij Vs scan on omega (a.k.a calculating eigenfrequencies or eigenfunctions? ) ****************
+****************************************************************************************************************
+
+7  1     					|detailed Riccati For calculating eigenfunctions. it is authomatically set to 1 if tides are included. see note.
+8 0     					|secant_omega_ri. For calculating the complex eigenfrequency using the secant method.
+
+************************** Range for scan in real omega TO SET IF #7 == 0 && #8 == 0  ************************
+
+9 0.2089     				|w_min_r. Omega real min
+10 0.2090 					|w_max_r. Omega real max
+11  1  	    				|numStepsOmega_r. Number of steps for scan in omega_r
+12  2.0						|displacement from star's boundaries during calculation eigenfrequencies(or Steffen gives troubles), i.e. centerRel = csiRel_model[0]+(csiRel_model[1] - csiRel_model[0])/2.0;
+
+********************* Range for scan in imaginary omega TO SET IF #7 == 0 && #8 == 0, neglected if #1==1 ************************
+
+13  0 						|w_min_i. Omega imaginary min. 
+14  0						|w_max_i. Omega imaginary max. 
+15  1        				|numStepsOmega_i. Number of steps for scan in omega_i.
+
+****************************************************************************************************************
+*********************************** info eigenfunctions TO SET if #7==1 ****************************************
+****************************************************************************************************************
+
+16  5.1634966460385243    			|eigenv_r. Real eigenfrequency 
+17  1.0159853859745819e-04      		|eigenv_i. Imaginary eigenfrequency. Neglected if #1 = 1
+18  1.0e-13     			|h_init_eigenfunc: initial timestep integration eigenfunctions
+19  1.0e-13					|eps_abs_eigenfunc: absolute accuracy integration for eigenfunctions.
+20  1.0e-13 				|eps_rel_eigenfunc: relative accuracy integration for eigenfunctions.
+21  1	      				|interpol_rij_func ==1, in integration of eigenfunc I read r_ij in input. ==0 r_ij are integrated. it is authomatically set to 1 in the non adiabatic case
+
+****************************************************************************************************************
+************ secant method TO SET IF #8 == 1 (eps_abs and rel set to 1e-12 by default) ************************
+****************************************************************************************************************
+
+22   4.2699999999999994e-01                             |omegaR_n_2
+23   4.2899999999999999e-01                             |omegaR_n_1
+24   0.0                        |omegaI_n_2
+25   0.0                                    |omegaI_n_1
+26   6.9895418179352709e-03                     |detRr_n_2
+27  -6.6231756512873862e-03         |detRr_n_1
+28  -6.9903023193602547e-03            |detRi_n_2
+29   6.6047294128503782e-03                |detRi_n_1
+30  0.0                                 |rootOmega_r for detRr
+31  0.0                                 |rootOmega_i for detRi
+
+****************************************************************************************************************
+****************************************      I/O options     **************************************************
+****************************************************************************************************************
+
+32 1						|writeEigenfunctionsSkip, print eigenfunction in output every #39 time steps
+
+****************************************************************************************************************
+**************** Integrator choices and intervals for calculation eigenfunctions *******************************
+****************                                                                 *******************************
+**************** During calc. eigefrenquencies, rk4 and bsimp are used in the    *******************************
+**************** adiab. and non-adiab. case, respectively                        *******************************
+****************************************************************************************************************
+
+33 3						|integratorRforV, integrator riccati components during calculation of eigenfunctions(if will be set when #7==1) ==1--> rk4, ==2 --> bsimp, ==3-->rkf45. It is ==1 in adiabatic case.
+34 3						|integratorV, integrator eigenfunctions ==1--> rk4, ==2 --> bsimp, ==3-->rkf45. It is ==1 in adiabatic case.
+35 1						|integratorFC, fit-center interval. ==1 integrate V across this interval 
+36 1						|integratorFS, fit-surface interval. ==1 integrate V across this interval 
+37 0						|not used
+
+****************************************************************************************************************
+************ 		binary parameters to account for the tidal potential 				************************
+****************************************************************************************************************
+
+38 1						|tidesFlag == 1/0. If tides are on, then flag #7 is 1 by default.
+39 5.0						|M2 = companion mass
+40 739.6					|Porb (mins)
+41 2.8800000000000000e+03 	|Pspin min (mins)
+42 2.8800000000000000e+03	|Pspin max (mins)
+43 1      					|numStepsPspin_i, Number of steps for scan in Pspin
+44 0						|deg_m, azimuthal number (form -l to +l)
+45 1						|deg_k, Fourier mode in time (from -inf to +inf)
+46 0.4						|ecc, eccentricity
+
+If code ends because of singular matrix error, decrease the accuracy requirement for the eigenfrequencies untill it runs. 
+The accuracy is re-setted to 1e-12 after one permutation. Check that it is actually re-setted cause
+I am not sure if I am passing the accuracies by reference or value.
+
+note#7: this flag is set to zero authomatically if the secant method is applied.
+
+note#4: set  to <=1e-12 in non-adiabatic+tides regime
+note#5: set  to <=1e-12 in non-adiabatic+tides regime
+
+************************************************************************************************************************
+Note: if you are looking for the complex eigenfrequency then the secant method is implemented. 
+However, in order for it to work you want to:
+- look for the adiabatic eigenfrequencies-> adiabatic flag set to 1. 
+Once you found them, you can find the complex eigenfrequencies one at the time:
+
+- set the adiabatic flag to zero, keep w_min_i = 0 and w_max_i = 0, and set w_min_r and w_max_r around the adiabatic
+eigenfrequency you calculated above (in a narrow range).
+- scan again in omega_r e find the interval where Re[det(Rin-Rout)_xfit] crosses zero
+- feed that interval to the secant method
+************************************************************************************************************************

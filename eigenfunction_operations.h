@@ -1,0 +1,11 @@
+double calcInnerProduct(int, int, int, double, double *, double *, double *, double *, double *, double *, double *, double &);
+void orderRadius_CsiR_CsiH(int, int, double *, double *, double *, double *, double *, std::vector<std::vector<double> >, std::vector<std::vector<double> >, int, int);
+void calculateInterpolated_rij(int, int, double, double *, double **, gsl_matrix *, int);
+void calculateInterpolated_rij_R6by6(int, int, double, double *, double **, gsl_matrix *, int);
+void calculateInterpolated_rij_R6by6_bisection(int, int, double, double *, double **, gsl_matrix *, int);
+void normalizeEigenfunctions_y8to1atR(const char *, const char *, int, int, int, double, double, int);
+void orderRadius_CsiR_linearityWithTides(int , double *, double *, double *, double *, double *, std::vector<std::vector<double> >);
+void orderEigenfunctionElmnts(int, std::vector<std::vector<double> >, std::vector<std::vector<double> > &);
+void storeIntegratorState_out(gsl_vector *, gsl_odeiv_step *, double, int);
+void storeIntegratorState_in(gsl_matrix *, gsl_odeiv_step *, double, int, int);
+void computing_Rij_from_rkf45_state(double **, double **, double *, int, int, double, gsl_matrix *, int, int);
