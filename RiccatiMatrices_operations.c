@@ -57,11 +57,11 @@ using namespace std;
  ************ 
  **************************************************************************************/
 
-void create_Riccati_ABCD_new(double csi_func, double P_func, double Vg_func,double Astar_func, double U_func,double l_func,
+void create_Riccati_ABCD_new(double csi_func, double Vg_func,double Astar_func, double U_func,double l_func,
 							 double omega_r_func, double omega_i_func, double Vt_func, double V_func, double del_func, double delad_func, 							
 							 double ks_func, double c1_func, double c2_func, double c3_func, double c4_func, double epsAd_func, double dlnLR_dlnr_func, 
 							 double epsS_func, gsl_matrix *A_func, gsl_matrix *B_func, gsl_matrix *C_func, gsl_matrix *D_func, int rowsRic_func, 
-							 int inWard_outWard_func, int nonAdiabatic_func, int tidesFlag_func)
+							 int inWard_outWard_func, int nonAdiabatic_func, int tidesFlag_func, int WD_tides_flag_func)
 {
 	
 	double wR2 = omega_r_func*omega_r_func,
@@ -78,7 +78,7 @@ void create_Riccati_ABCD_new(double csi_func, double P_func, double Vg_func,doub
     double changeVariables = csi_func;
 
     //FIXME, change csti with P everywhere!!!!!
-//    changeVariables = -V_func*P_func;
+    if(WD_tides_flag_func){changeVariables = V_func;}
     
     
 	gsl_matrix_set_zero(A_func);
@@ -196,14 +196,14 @@ void create_Riccati_ABCD_new(double csi_func, double P_func, double Vg_func,doub
 }//create_Riccati_ABCD_new
 
 
-void permute_Riccati_ABCD(double csi_func, double P_func, double Vg_func,double Astar_func, double U_func,double c1_func, double l_func,
+void permute_Riccati_ABCD(double csi_func, double Vg_func,double Astar_func, double U_func,double c1_func, double l_func,
 						  double omega_r_func, double omega_i_func, double Vt_func, double V_func, double del_func, double delad_func, 							
 						  double ks_func, double c2_func, double c3_func, double c4_func, double epsAd_func, double dlnLR_dlnr_func, 
 						  double epsS_func, 
 						  gsl_matrix *A_func, gsl_matrix *B_func, gsl_matrix *C_func, gsl_matrix *D_func, gsl_matrix *M_func, 
 						  gsl_matrix *T_func,gsl_matrix *matDummySizeT_func, gsl_matrix *matDummySizeT_2_func, 
 						  gsl_vector *vecDummySizeT2_func, gsl_permutation *permDummySizeT_func, int rowsRic_func, 
-						  int inWard_outWard_func, int nonAdiabatic_func, int tidesFlag_func)
+						  int inWard_outWard_func, int nonAdiabatic_func, int tidesFlag_func, int WD_tides_flag_func)
 {
 	
 	int rowsT_func = 2*rowsRic_func, i = 0, j = 0;
@@ -220,11 +220,11 @@ void permute_Riccati_ABCD(double csi_func, double P_func, double Vg_func,double 
 	 *** With y divided by r^(l-2)	
 	 ***/
 	
-		create_Riccati_ABCD_new(csi_func, P_func, Vg_func, Astar_func, U_func, l_func,
+		create_Riccati_ABCD_new(csi_func, Vg_func, Astar_func, U_func, l_func,
 								omega_r_func, omega_i_func, Vt_func, V_func, del_func, delad_func, 							
 								ks_func, c1_func, c2_func, c3_func, c4_func, epsAd_func, dlnLR_dlnr_func, 
 								epsS_func, A_func, B_func, C_func, D_func, rowsRic_func, inWard_outWard_func,
-								nonAdiabatic_func, tidesFlag_func);
+								nonAdiabatic_func, tidesFlag_func, WD_tides_flag_func);
 
 	/*storing the submatrices A, B, C, and D in M */
 	for (i=0; i<rowsRic_func; i++)

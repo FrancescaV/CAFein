@@ -197,8 +197,7 @@ using namespace std;
 
 int
 main (void)
-{	
-	
+{
 	cout << setiosflags(ios_base::scientific) << setprecision(16);
 	cerr << setiosflags(ios_base::scientific) << setprecision(16);
 	
@@ -212,9 +211,10 @@ main (void)
 	minsPerYears = 60.0*24.0*365.242199,   //m/h h/d d/y;
 	secPerYears = secPerMin*minsPerYears,	   //s/m m/h h/d d/y
 	c_cgs = 2.9979245800e10,
-	Gsolar = G * Msun_toG/pow(Rsun_toCm, 3.0);
+	Gsolar = G * Msun_toG/pow(Rsun_toCm, 3.0),
+    moveOffset = 10.0;
 	
-	const int Willems2003Test = 0; 
+	const int Willems2003Test = 0, WD_tides_flag = 0;
 	/***************************************************************	
 	 ***** Getting accuracies and various params from an input file.
 	 ***** 
@@ -334,7 +334,7 @@ main (void)
 	 *** Some more variables...
 	 *******************************************************/
 	double omega_r_noDim = 0.0, omega_i_noDim = 0.0, omega_r2_noDim = 0.0, dbl_loopOmega_r = 0.0, 
-	dbl_loopOmega_i = 0.0, dbl_loopPspin = 0.0, csiRel = 0.0, csi_final = 0.0, h = 0.0, 
+	dbl_loopOmega_i = 0.0, dbl_loopPspin = 0.0, csiRel = 0.0, csiRelTempo = 0.0, csi_final = 0.0, h = 0.0,
 	normRminimum = 0.0, c1_center = 0.0, V_surf = 0.0, delAD_surf = 0.0, 
 	det_RoMinusRin = 0.0, centerRel = 0.0, surfaceRel = 0.0, M1_Msun = 0.0, 
 	L1_Lsun = 0.0, Teff_K = 0.0, 
@@ -361,7 +361,7 @@ main (void)
 	Nint_R_atCheckNorm = 0, Nint_R_tot = 0;
 	
 	double **Rij_calc_ad, *csi_calc_ad,*mass_model, *csiRel_model, *Vg_model, *Astar_model, 
-	*U_model, *c1_model, *rho_model, *g_model, *N2_model, *L2_model, 
+	*U_model, *c1_model, *rho_model, *g_model, *N2_model, *L2_model, *rRel_model,
 	*Vt_model, *V_model, *del_model, *delad_model, *ks_model, *c2_model, *c3_model, 
 	*c4_model, *epsAd_model, *dlnLR_dlnr_model, *epsS_model, 
 	*P_model, *Gamma1_model, *T_model, *Cp_model, *S_model, *Lr_model, 	
@@ -373,7 +373,7 @@ main (void)
 	**fitRhoCoeffs, *rhoFuncs, **fit_g_Coeffs, *gFuncs, **fitPcoeffs, *PFuncs, 
 	**fitGamma1coeffs, *Gamma1Funcs, **fitN2coeffs, *N2Funcs, 
 	**fitTcoeffs, *TFuncs, **fit_Cp_Coeffs, *CpFuncs, 
-	**fitScoeffs, *SFuncs, **fit_Lr_Coeffs, *LrFuncs; 
+	**fitScoeffs, *SFuncs, **fit_Lr_Coeffs, *LrFuncs, **fit_rRel_Coeffs, *rRelFuncs;
 	
 	/* For eigenfunctions */
 	vector<Row> elements_Rin, elements_Rout, rRel_and_rkf45_stateIn, rRel_and_rkf45_stateOut, dummyTable;
@@ -409,6 +409,7 @@ main (void)
 	CpFuncs	   = dfun(4);		
 	SFuncs	   = dfun(4);		
 	LrFuncs	   = dfun(4);		
+    rRelFuncs  = dfun(4);
 	
 	for (i=0; i<4; i++)
 	{
@@ -436,6 +437,7 @@ main (void)
 		CpFuncs[i]     = 0.0;
 		SFuncs[i]      = 0.0;
 		LrFuncs[i]     = 0.0;
+        rRelFuncs[i]     = 0.0;
 		
 	}
 	/***********************************************************
@@ -725,6 +727,7 @@ main (void)
 	meshModel--;
 	
 	csiRel_model = dfun(meshModel);
+    rRel_model   = dfun(meshModel);
 	mass_model   = dfun(meshModel);
 	Vg_model 	 = dfun(meshModel);
 	Astar_model  = dfun(meshModel);
@@ -777,6 +780,7 @@ main (void)
 	fit_Cp_Coeffs	  = dfunc(4,meshModel);
 	fitScoeffs		  = dfunc(4,meshModel);
 	fit_Lr_Coeffs	  = dfunc(4,meshModel);
+    fit_rRel_Coeffs	  = dfunc(4,meshModel);
 	
 	
 	M1_Msun = tablePoly[1][0];
@@ -802,7 +806,8 @@ main (void)
 		rho_model[j]	  = pow(10.0,tablePoly[i][1]);
 		P_model[j]        = pow(10.0,tablePoly[i][2]);
 		T_model[j]		  = pow(10.0,tablePoly[i][3]);
-		csiRel_model[j]   = tablePoly[i][4];
+        rRel_model[j]     = tablePoly[i][4];
+        
 		Vg_model[j]		  = tablePoly[i][5];
 		Astar_model[j] 	  = tablePoly[i][6];
 		U_model[j]        = tablePoly[i][7];
@@ -816,6 +821,8 @@ main (void)
 		Gamma1_model[j]   = tablePoly[i][28];
 		S_model[j]        = tablePoly[i][29];
 		
+        csiRel_model[j]   = rRel_model[j];
+        
 		if(nonAdiabatic)
 		{
 			V_model[j]			= tablePoly[i][13];
@@ -829,11 +836,15 @@ main (void)
 			c3_model[j]			= tablePoly[i][22];
 			c4_model[j]			= tablePoly[i][23];
 			dlnLR_dlnr_model[j] = tablePoly[i][24];
+            
+            if(WD_tides_flag){csiRel_model[j]   = moveOffset - log(P_model[j]);}
 		}//if(nonAdiabatic)
 		j++;
 	}
 	tablePoly.clear();
-	
+    cout << "P_model[0] = " << P_model[0] << endl;
+    cout << csiRel_model[0] << "   " << csiRel_model[meshModel-1] << endl;
+    
 	rho_surf_noDim = rho_model[meshModel-1];
 	g_surf_noDim = g_model[meshModel-1];
 	
@@ -854,9 +865,9 @@ main (void)
 	
 	for(i = 0; i<meshModel; i++)
 	{
-		inertia_x[i] = csiRel_model[i];
+		inertia_x[i] = rRel_model[i];
 		
-		inertia_f[i] = 4.0*PI*pow(csiRel_model[i], 4.0)*rho_model[i];
+		inertia_f[i] = 4.0*PI*pow(rRel_model[i], 4.0)*rho_model[i];
 	}	
 	
 	momInertia_noDim = FourPt_DoubleStar(inertia_x, inertia_f, meshModel, 0, meshModel-1, err_momInertia);
@@ -903,6 +914,7 @@ main (void)
 	calcSteffenInterp(meshModel, csiRel_model, Cp_model, fit_Cp_Coeffs);
 	calcSteffenInterp(meshModel, csiRel_model, S_model, fitScoeffs);
 	calcSteffenInterp(meshModel, csiRel_model, Lr_model, fit_Lr_Coeffs);
+    calcSteffenInterp(meshModel, csiRel_model, rRel_model, fit_rRel_Coeffs);
 	
 	if(nonAdiabatic)
 	{
@@ -947,7 +959,7 @@ main (void)
 		fitC1coeffs, csiRel_model, matA, matB, matC, matD, matCR, matR, matdR, matT, matM, matDummySizeR, 
 		matDummySizeR_2, matDummySizeT, matDummySizeT_2, vecDummySizeR2, vecDummySizeT2, vecDummySizeR, 
 		vecDummySizeR_3, permDummySizeT, inwardOutward, interpol_rij, Rij_calc_ad, csi_calc_ad, 
-		startInterpol_rij, endInterpol_rij, nonAdiabatic, tidesFlag, PFuncs, fitPcoeffs};
+		startInterpol_rij, endInterpol_rij, nonAdiabatic, tidesFlag, WD_tides_flag};
 	
 	params_integrator_adiabatic_struct params_eigenfunc_adiabatic = {csiIn_force, csiFin_force, rowsRic, meshModel, omega_r_noDim, 
 		omega_i_noDim, deg_l_dbl, VgFuncs, AstarFuncs, UFuncs, c1Funcs, VFuncs, delADFuncs, delFuncs, VtFuncs, ksFuncs, 
@@ -955,7 +967,7 @@ main (void)
 		fitC1coeffs, csiRel_model, matA, matB, 
 		matC, matD, matCR, matR, matdR, matTtot, matM, matDummySizeR, matDummySizeR_2, matDummySizeT, 
 		matDummySizeT_2, vecDummySizeR2, vecDummySizeT2, vecDummySizeR, vecDummySizeR_3, permDummySizeT,
-		inwardOutward, interpol_rij, Rij_calc_ad, csi_calc_ad, startInterpol_rij, endInterpol_rij, nonAdiabatic, tidesFlag, PFuncs, fitPcoeffs};
+		inwardOutward, interpol_rij, Rij_calc_ad, csi_calc_ad, startInterpol_rij, endInterpol_rij, nonAdiabatic, tidesFlag, WD_tides_flag};
 	
 	params_integrator_R_nonAd_struct params_eigenfreq_nonAdiabatic = {rowsRic, meshModel, omega_r_noDim, omega_i_noDim, deg_l_dbl, VgFuncs, AstarFuncs, UFuncs, c1Funcs, 
 		VFuncs, delADFuncs, delFuncs, VtFuncs, ksFuncs, epsADFuncs, epsSFuncs, c2Funcs, 
@@ -964,7 +976,7 @@ main (void)
 		fitEpsADcoeffs, fitEpsScoeffs, fitC2coeffs, fitC3coeffs, fitC4coeffs, fitdlnLR_dlnrCoeffs, 
 		csiRel_model, matA, matB, matC, matD, matCR,matR, matdR, matT, matM, matDummySizeR, 
 		matDummySizeR_2, matDummySizeT, matDummySizeT_2, vecDummySizeR2, vecDummySizeT2, vecDummySizeR, 
-		vecDummySizeR_3, permDummySizeT, inwardOutward, nonAdiabatic, tidesFlag, PFuncs, fitPcoeffs};
+		vecDummySizeR_3, permDummySizeT, inwardOutward, nonAdiabatic, tidesFlag, WD_tides_flag};
 	
 	/************************************************************************************
 	 ***  If adiabatic I use the integrator that handles both R and V at the same time.
@@ -2221,7 +2233,7 @@ main (void)
 						fitC2coeffs, fitC3coeffs, fitC4coeffs, fitdlnLR_dlnrCoeffs, csiRel_model, matA, matB, matC, matD, matCR, matR, matdR, 
 						matTtot, matM, matDummySizeR, matDummySizeR_2, matDummySizeT, matDummySizeT_2, vecDummySizeR2, vecDummySizeT2, vecDummySizeR, 
 						vecDummySizeR_3, permDummySizeT, inwardOutward, interpol_rij, sizeRij_calc, Rij_calc, csi_calc, fitRij_calcCoeffs, Rij_calcFuncs, 
-						startInterpol_rij, endInterpol_rij, nonAdiabatic, tidesFlag, PFuncs, fitPcoeffs};
+						startInterpol_rij, endInterpol_rij, nonAdiabatic, tidesFlag, WD_tides_flag};
 					
 					params_integrator_V_nonAd_rkf45_struct params_eigenfunc_nonAdiabatic_rkf45 = {csiIn_force, csiFin_force, rowsRic, meshModel, omega_r_noDim, 
 						omega_i_noDim, deg_l_dbl, VgFuncs, AstarFuncs, UFuncs, c1Funcs, VFuncs, delADFuncs, delFuncs, VtFuncs, ksFuncs, 
@@ -2230,7 +2242,7 @@ main (void)
 						fitC2coeffs, fitC3coeffs, fitC4coeffs, fitdlnLR_dlnrCoeffs, csiRel_model, matA, matB, matC, matD, matCR, matR, matdR, 
 						matTtot, matM, matDummySizeR, matDummySizeR_2, matDummySizeT, matDummySizeT_2, vecDummySizeR2, vecDummySizeT2, vecDummySizeR, 
 						vecDummySizeR_3, permDummySizeT, inwardOutward, interpol_rij, sizeRij_calc, Rij_calc, csi_calc, 
-						startInterpol_rij, endInterpol_rij, nonAdiabatic, tidesFlag, rRel_and_rkf45_state, Rij_from_rkf45_state, size_rkf45_state, PFuncs, fitPcoeffs};
+						startInterpol_rij, endInterpol_rij, nonAdiabatic, tidesFlag, rRel_and_rkf45_state, Rij_from_rkf45_state, size_rkf45_state, WD_tides_flag};
 					
 					gsl_odeiv_system sys_Riccati_R_eigenfunc_nonAdiabatic       = {func_Riccati_Vonly, jac_Riccati_Vonly, dimensionODE_V, &params_eigenfunc_nonAdiabatic};
 					gsl_odeiv_system sys_Riccati_R_eigenfunc_nonAdiabatic_rkf45 = {func_Riccati_Vonly_rkf45, jac_Riccati_Vonly, dimensionODE_V, &params_eigenfunc_nonAdiabatic_rkf45};		
@@ -2472,13 +2484,24 @@ main (void)
 						if(numStepsPspin == 1 && ((IntegrationStepsEigenfunc < 100) || (IntegrationStepsEigenfunc % writeEigenfunctionsSkip == 0)))
 						{
 							
+                            if(WD_tides_flag)
+                            {
+                                /*from the new integration variable 10-lnP compute the corresponding radius*/
+                                evalSteffenInterp(meshModel,csiRel_model,fit_rRel_Coeffs,csiRel,rRelFuncs);
+                                csiRelTempo = rRelFuncs[0];
+                            }
+                            else
+                            {
+                                csiRelTempo = csiRel;
+                            }
 							/*Uncomment this one if you want all the Riccati coefficients together with the eigenfunctions*/
 //							columnsEigenfuncFile = writeF_eigenfunctions(eigenfunctions, csiRel, csiRel*R1_Rsun, omega_r_noDim, omega_i_noDim, deg_l_dbl, 
 //																		 rhoFuncs[0], gFuncs[0], vecUoriginal, vecVoriginal, matRprime, 
 //																		 rowsRic, adiabatic, tidesFlag, Pspin_minutes, Porb_minutes, deg_m_dbl, deg_k_dbl,
 //																		 tidesTimescale_a, GRtimescale_a, tidesTimescale_Omega, arg_Flmk*180.0/PI, Mod_Flmk);
 							
-							columnsEigenfuncFile = writeF_eigenfunctions_and_unperturbed_model(eigenfunctions, csiRel, csiRel*cm_units/Rsun_toCm, 						  																			
+                            
+							columnsEigenfuncFile = writeF_eigenfunctions_and_unperturbed_model(eigenfunctions, csiRelTempo, csiRelTempo*cm_units/Rsun_toCm,
 																							   vecUoriginal, vecVoriginal, rhoFuncs[0], gFuncs[0], 
 																							   PFuncs[0], Gamma1Funcs[0], N2Funcs[0], delADFuncs[0], 
 																							   TFuncs[0], CpFuncs[0], SFuncs[0], LrFuncs[0], 
@@ -2739,7 +2762,19 @@ main (void)
 //																 tidesTimescale_a, GRtimescale_a, tidesTimescale_Omega, arg_Flmk*180.0/PI, Mod_Flmk);
 					
 					if (adiabatic && tidesFlag){Mod_Flmk = gsl_vector_get(Flmk_realImag, 0);}
-					columnsEigenfuncFile = writeF_eigenfunctions_and_unperturbed_model(eigenfunctionsSurface, csiRel, csiRel*cm_units/Rsun_toCm, 						  																			
+
+                    if(WD_tides_flag)
+                    {
+                        /*from the new integration variable 10-lnP compute the corresponding radius*/
+                        evalSteffenInterp(meshModel,csiRel_model,fit_rRel_Coeffs,csiRel,rRelFuncs);
+                        csiRelTempo = rRelFuncs[0];
+                    }
+                    else
+                    {
+                        csiRelTempo = csiRel;
+                    }
+
+                    columnsEigenfuncFile = writeF_eigenfunctions_and_unperturbed_model(eigenfunctionsSurface, csiRelTempo, csiRelTempo*cm_units/Rsun_toCm,
 																					   vecUoriginal_normalized, vecVoriginal_normalized, rhoFuncs[0], gFuncs[0], 
 																					   PFuncs[0], Gamma1Funcs[0], N2Funcs[0], delADFuncs[0], 
 																					   TFuncs[0], CpFuncs[0], SFuncs[0], LrFuncs[0], 
@@ -2833,10 +2868,12 @@ main (void)
 	free(CpFuncs);
 	free(SFuncs);
 	free(LrFuncs);
+    free(rRelFuncs);
 	
 	free(rho_model);
 	free(g_model);
 	free(csiRel_model);
+    free(rRel_model);
 	free(mass_model);
 	free(Vg_model);
 	free(Astar_model);
@@ -2889,6 +2926,7 @@ main (void)
 		free(fit_Cp_Coeffs[i]);
 		free(fitScoeffs[i]);
 		free(fit_Lr_Coeffs[i]);
+        free(fit_rRel_Coeffs[i]);
 		free(fitN2coeffs[i]);
 	}
 	
@@ -2915,6 +2953,7 @@ main (void)
 	free(fit_Cp_Coeffs);
 	free(fitScoeffs);
 	free(fit_Lr_Coeffs);
+    free(fit_rRel_Coeffs);
 	free(fitN2coeffs);
 	free(y_Riccati_all);
 	

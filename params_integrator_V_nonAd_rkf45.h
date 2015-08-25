@@ -34,10 +34,8 @@ typedef struct
 	
 	double **rRel_and_rkf45_state_struct, *Rij_from_rkf45_state_struct;
 	
-	int size_rkf45_state_struct;
+	int size_rkf45_state_struct, WD_tides_flag_func;
 	
-    double *PFuncs_struct, **fitPcoeffs_struct;
-
 }params_integrator_V_nonAd_rkf45_struct;
 
 

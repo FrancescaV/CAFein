@@ -22,9 +22,7 @@ typedef struct
 
 	gsl_permutation *permDummySizeT_struct;
 	
-	int &inWard_outWard_struct, nonAdiabatic_struct, tidesFlag_struct;
-    
-    double *PFuncs_struct, **fitPcoeffs_struct;
+	int &inWard_outWard_struct, nonAdiabatic_struct, tidesFlag_struct, WD_tides_flag_func;
 	
 }params_integrator_R_nonAd_struct;
 

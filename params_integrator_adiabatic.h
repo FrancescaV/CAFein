@@ -26,9 +26,7 @@ typedef struct
 	double **Rij_calc_struct, *csi_calc_struct;
 		
 	int &startInterpol_rij_struct, &endInterpol_rij_struct, 
-	nonAdiabatic_struct, tidesFlag_struct;
-	
-    double *PFuncs_struct, **fitPcoeffs_struct;
+	nonAdiabatic_struct, tidesFlag_struct, WD_tides_flag_func;
 
 }params_integrator_adiabatic_struct;
 

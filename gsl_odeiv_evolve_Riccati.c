@@ -148,13 +148,12 @@ int func_Riccati_R (double csi, const double y[], double f[], void *params)
 	evalSteffenInterp(polyMesh,p->csiRel_vec_struct,p->fitAstarCoeffs_struct,csi, p->AstarFuncs_struct);
 	evalSteffenInterp(polyMesh,p->csiRel_vec_struct,p->fitUcoeffs_struct,csi, p->UFuncs_struct);
 	evalSteffenInterp(polyMesh,p->csiRel_vec_struct,p->fitC1coeffs_struct,csi, p->c1Funcs_struct); 
-    evalSteffenInterp(polyMesh,p->csiRel_vec_struct,p->fitPcoeffs_struct,csi, p->PFuncs_struct);
 
 	/********************************************************************************
 	 ***    Starting from original ABCD, going to M, permuting M and back to ABCD
 	 ***    after this:T and M are unchanged, while A, B, C, D are permuted 
 	 ********************************************************************************/				
-	permute_Riccati_ABCD(csi, p->PFuncs_struct[0], p->VgFuncs_struct[0], p->AstarFuncs_struct[0],
+	permute_Riccati_ABCD(csi, p->VgFuncs_struct[0], p->AstarFuncs_struct[0],
 						 p->UFuncs_struct[0], p->c1Funcs_struct[0], l, omega_r, 						 
 						 p->omega_i_struct, p->VtFuncs_struct[0], p->VFuncs_struct[0], 
 						 p->delFuncs_struct[0], p->delADFuncs_struct[0], p->ksFuncs_struct[0], 
@@ -164,7 +163,7 @@ int func_Riccati_R (double csi, const double y[], double f[], void *params)
 						 p->matM_struct, p->matT_struct,
 						 p-> matDummySizeT_struct, p-> matDummySizeT_2_struct, 
 						 p->vecDummySizeT2_struct, p->permDummySizeT_struct, rowsRic, 
-						 p->inWard_outWard_struct, p->nonAdiabatic_struct, p->tidesFlag_struct);	
+						 p->inWard_outWard_struct, p->nonAdiabatic_struct, p->tidesFlag_struct, p->WD_tides_flag_func);
 	/********************************************************************************
 	 ***  Fill in Riccati matrix to create Riccati equations ==>
 	 ***  Matrix R contains the calculated values
@@ -430,7 +429,6 @@ int func_Riccati_Ronly (double csi, const double y[], double f[], void *params)
 	evalSteffenInterp(p->polyMesh_struct,p->csiRel_vec_struct,p->fitC2coeffs_struct,csi, p->c2Funcs_struct); 
 	evalSteffenInterp(p->polyMesh_struct,p->csiRel_vec_struct,p->fitC4coeffs_struct,csi, p->c4Funcs_struct); 
 	evalSteffenInterp(p->polyMesh_struct,p->csiRel_vec_struct,p->fitdlnLR_dlnrCoeffs_struct,csi, p->dlnLR_dlnrFuncs_struct); 
-    evalSteffenInterp(p->polyMesh_struct,p->csiRel_vec_struct,p->fitPcoeffs_struct,csi, p->PFuncs_struct);
 
 	/*these should be very small for a WD*/
 	evalSteffenInterp(p->polyMesh_struct,p->csiRel_vec_struct,p->fitEpsADcoeffs_struct,csi, p->epsADFuncs_struct); 
@@ -440,7 +438,7 @@ int func_Riccati_Ronly (double csi, const double y[], double f[], void *params)
 	 ***    Starting from original ABCD, going to M, permuting M and back to ABCD
 	 ***    after this:T and M are unchanged, while A, B, C, D are permuted 
 	 ********************************************************************************/				
-	permute_Riccati_ABCD(csi, p->PFuncs_struct[0], p->VgFuncs_struct[0], p->AstarFuncs_struct[0],
+	permute_Riccati_ABCD(csi, p->VgFuncs_struct[0], p->AstarFuncs_struct[0],
 						 p->UFuncs_struct[0], p->c1Funcs_struct[0], p->l_struct, p->omega_r_struct, 						 
 						 p->omega_i_struct, p->VtFuncs_struct[0], p->VFuncs_struct[0], 
 						 p->delFuncs_struct[0], p->delADFuncs_struct[0], p->ksFuncs_struct[0], 
@@ -450,7 +448,7 @@ int func_Riccati_Ronly (double csi, const double y[], double f[], void *params)
 						 p->matM_struct, p->matT_struct,
 						 p-> matDummySizeT_struct, p-> matDummySizeT_2_struct, 
 						 p->vecDummySizeT2_struct, p->permDummySizeT_struct, p->rowsRic_struct, 
-						 p->inWard_outWard_struct, p->nonAdiabatic_struct, p->tidesFlag_struct);
+						 p->inWard_outWard_struct, p->nonAdiabatic_struct, p->tidesFlag_struct, p->WD_tides_flag_func);
 	
 	/* ABCD are simmetric by construction*/
 	/********************************************************************************
@@ -586,7 +584,6 @@ int func_Riccati_Vonly (double csi, const double y[], double f[], void *params)
 	evalSteffenInterp(p->polyMesh_struct,p->csiRel_vec_struct,p->fitC2coeffs_struct,csi, p->c2Funcs_struct); 
 	evalSteffenInterp(p->polyMesh_struct,p->csiRel_vec_struct,p->fitC4coeffs_struct,csi, p->c4Funcs_struct); 
 	evalSteffenInterp(p->polyMesh_struct,p->csiRel_vec_struct,p->fitdlnLR_dlnrCoeffs_struct,csi, p->dlnLR_dlnrFuncs_struct); 
-    evalSteffenInterp(p->polyMesh_struct,p->csiRel_vec_struct,p->fitPcoeffs_struct,csi, p->PFuncs_struct);
 
 	/*these should be very small for a WD*/
 	evalSteffenInterp(p->polyMesh_struct,p->csiRel_vec_struct,p->fitEpsADcoeffs_struct,csi, p->epsADFuncs_struct); 
@@ -596,7 +593,7 @@ int func_Riccati_Vonly (double csi, const double y[], double f[], void *params)
 	 ***    Starting from original ABCD, going to M, permuting M and back to ABCD
 	 ***    after this:T and M are unchanged, while A, B, C, D are permuted 
 	 ********************************************************************************/				
-	permute_Riccati_ABCD(csi, p->PFuncs_struct[0], p->VgFuncs_struct[0], p->AstarFuncs_struct[0],
+	permute_Riccati_ABCD(csi, p->VgFuncs_struct[0], p->AstarFuncs_struct[0],
 						 p->UFuncs_struct[0], p->c1Funcs_struct[0], p->l_struct, p->omega_r_struct, 						 
 						 p->omega_i_struct, p->VtFuncs_struct[0], p->VFuncs_struct[0], 
 						 p->delFuncs_struct[0], p->delADFuncs_struct[0], p->ksFuncs_struct[0], 
@@ -606,7 +603,7 @@ int func_Riccati_Vonly (double csi, const double y[], double f[], void *params)
 						 p->matM_struct, p->matT_struct,
 						 p-> matDummySizeT_struct, p-> matDummySizeT_2_struct, 
 						 p->vecDummySizeT2_struct, p->permDummySizeT_struct, p->rowsRic_struct, 
-						 p->inWard_outWard_struct, p->nonAdiabatic_struct, p->tidesFlag_struct);
+						 p->inWard_outWard_struct, p->nonAdiabatic_struct, p->tidesFlag_struct, p->WD_tides_flag_func);
 	/********************************************************************************
 	 ***    Interpolating Rij and create matrix R
 	 ********************************************************************************/				
@@ -682,7 +679,6 @@ int func_Riccati_Vonly_rkf45 (double csi, const double y[], double f[], void *pa
 	evalSteffenInterp(p->polyMesh_struct,p->csiRel_vec_struct,p->fitC2coeffs_struct,csi, p->c2Funcs_struct); 
 	evalSteffenInterp(p->polyMesh_struct,p->csiRel_vec_struct,p->fitC4coeffs_struct,csi, p->c4Funcs_struct); 
 	evalSteffenInterp(p->polyMesh_struct,p->csiRel_vec_struct,p->fitdlnLR_dlnrCoeffs_struct,csi, p->dlnLR_dlnrFuncs_struct); 
-    evalSteffenInterp(p->polyMesh_struct,p->csiRel_vec_struct,p->fitPcoeffs_struct,csi, p->PFuncs_struct);
 	
 	/*these should be very small for a WD*/
 	evalSteffenInterp(p->polyMesh_struct,p->csiRel_vec_struct,p->fitEpsADcoeffs_struct,csi, p->epsADFuncs_struct); 
@@ -692,7 +688,7 @@ int func_Riccati_Vonly_rkf45 (double csi, const double y[], double f[], void *pa
 	 ***    Starting from original ABCD, going to M, permuting M and back to ABCD
 	 ***    after this:T and M are unchanged, while A, B, C, D are permuted 
 	 ********************************************************************************/				
-	permute_Riccati_ABCD(csi, p->PFuncs_struct[0], p->VgFuncs_struct[0], p->AstarFuncs_struct[0],
+	permute_Riccati_ABCD(csi, p->VgFuncs_struct[0], p->AstarFuncs_struct[0],
 						 p->UFuncs_struct[0], p->c1Funcs_struct[0], p->l_struct, p->omega_r_struct, 						 
 						 p->omega_i_struct, p->VtFuncs_struct[0], p->VFuncs_struct[0], 
 						 p->delFuncs_struct[0], p->delADFuncs_struct[0], p->ksFuncs_struct[0], 
@@ -702,7 +698,7 @@ int func_Riccati_Vonly_rkf45 (double csi, const double y[], double f[], void *pa
 						 p->matM_struct, p->matT_struct,
 						 p-> matDummySizeT_struct, p-> matDummySizeT_2_struct, 
 						 p->vecDummySizeT2_struct, p->permDummySizeT_struct, p->rowsRic_struct, 
-						 p->inWard_outWard_struct, p->nonAdiabatic_struct, p->tidesFlag_struct);
+						 p->inWard_outWard_struct, p->nonAdiabatic_struct, p->tidesFlag_struct, p->WD_tides_flag_func);
 	/********************************************************************************
 	 ***    Interpolating Rij and create matrix R
 	 ********************************************************************************/				

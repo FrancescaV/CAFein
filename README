@@ -792,3 +792,6 @@ Added the actual surface surfaceRel to the boundary conditions at the star's sur
 12/27/2013
 For the ZAMS star on the cluster, I had troubles during the calculation of the eigenfunctions at the end of the permutation interval. 
 I moved the boundary by a bit to avoid the problem. I should comment that line for the WD.
+
+8/25/2015
+- Setting the pressure as integration variable. Computation of tidal eigenfunctions for test case goes from 15 mins to 9 mins...

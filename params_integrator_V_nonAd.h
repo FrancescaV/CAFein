@@ -30,10 +30,8 @@ typedef struct
 	
 	int &startInterpol_rij_struct, &endInterpol_rij_struct;
 	
-	int nonAdiabatic_struct, tidesFlag_struct;
-    
-    double *PFuncs_struct, **fitPcoeffs_struct;
-	
+	int nonAdiabatic_struct, tidesFlag_struct, WD_tides_flag_func;
+    	
 }params_integrator_V_nonAd_struct;
 
 
