@@ -50,10 +50,6 @@ contains the input files to compute the l = 2 adiabatic eigenfunctions
 of a polytrope with index n = 3. Specifically, it computes the 
 g5-eigenmode (see README.dat in the corresponding folder for more info).
 
-First of all, unzip the stellar model input file in 
-/Users/francesca/Northwestern/Research/realModels_eigenvalues_Eigenfunc_gsl_v23_zioGio_readingAllRij_withP/
-input/test_suite/input_stellar_models
-
 From CAFein’s main folder, copy relevant input files
 
 > cd input
