@@ -1,0 +1,161 @@
+***************************************************************************
+***************************************************************************
+*************** 
+*************** CAFein’s How To
+*************** 
+***************************************************************************
+***************************************************************************
+
+Below I explain how to get the code, compile it, and run a few test cases. 
+Details can be found in CAFein’s instrument paper at http://arxiv.org/abs/1301.3197.
+I strongly recommend to read the paper first. 
+
+************************************
+************************************
+**** 1) Getting CAFein
+************************************
+************************************
+
+Go in the folder where you want CAFein to be and clone the github repository:
+
+> git clone https://github.com/FrancescaV/CAFein
+
+Now you have the folder "CAFein". 
+
+************************************
+************************************
+**** 2) Compiling CAFein
+************************************
+************************************
+
+> cd CAFein
+> make clean
+> make
+
+The code should compile with a few warnings.
+
+************************************
+************************************
+**** 3) Using CAFein -- test cases
+************************************
+************************************
+
+************************************
+**** 3.1. — Adiabatic eigenfunctions
+****        of a polytrope
+************************************
+
+The test suite CAFein/input/test_suite/polytrope_n3_eigenfunctions 
+contains the input files to compute the l = 2 adiabatic eigenfunctions 
+of a polytrope with index n = 3. Specifically, it computes the 
+g5-eigenmode (see README.dat in the corresponding folder for more info).
+
+First of all, unzip the stellar model input file in 
+/Users/francesca/Northwestern/Research/realModels_eigenvalues_Eigenfunc_gsl_v23_zioGio_readingAllRij_withP/
+input/test_suite/input_stellar_models
+
+From CAFein’s main folder, copy relevant input files
+
+> cd input
+> cp test_suite/polytrope_n3_eigenfunctions/acc_and_dim.dat .
+> cp test_suite/polytrope_n3_eigenfunctions/stellarModelFilesAddress.dat .
+
+Back to CAFein’s main folder, to run it
+
+> cd ..
+> ./CAFein
+
+It runs in about 10 seconds on my machine, printing "cazzo DONE" when DONE.
+
+************************************
+**** 3.1.1 — Plot the output
+************************************
+
+The folder CAFein/pythonScripts contains python scripts useful to visualize 
+the data. Here we use plot_Ad_eigenfunctions_wholeStar.py, for adiabatic eigenfunctions. 
+
+From CAFein's main folder:
+
+> cd pythonScripts
+> python plot_Ad_eigenfunctions_wholeStar.py
+
+This will create a PDF file in CAFein/output/plots called Eigenfunctions_0.0_to_1.1.pdf. 
+In this PDF the newly calculated (unnormalized) eigenfunctions for the the g5 mode are plotted (in black) 
+together with those contained in the test suite example CAFein/input/test_suite/polytrope_n3_eigenfunctions/Output (in red). 
+If the ran were successful these should look the same (they overlap).
+
+******************************************
+**** 3.2. — Non - adiabatic eigenfunctions
+****        of a massive MS star
+************************************
+
+This test_suite computes the non-adiabatic eigenfunctions of a 7Msun main sequence star
+at Z = 0.03. Specifically, it computes the p2 - eigenmode.
+
+From CAFein’s main folder, copy relevant input files
+
+> cd input
+> cp test_suite/non_adiabatic_eigenfunctions/acc_and_dim.dat .
+> cp test_suite/non_adiabatic_eigenfunctions/stellarModelFilesAddress.dat .
+
+Back to CAFein’s main folder, to run it
+
+> cd ..
+> ./CAFein
+
+It runs in about 7 minutes on my machine, printing "cazzo DONE" when DONE.
+
+************************************
+**** 3.2.1 — Plot the output
+************************************
+
+The folder CAFein/pythonScripts contains python scripts useful to visualize 
+the data. Here we use plot_nonAd_eigenfunctions_wholeStar.py, for non - adiabatic eigenfunctions. 
+
+From CAFein's main folder:
+
+> cd pythonScripts
+> python plot_nonAd_eigenfunctions_wholeStar.py
+
+This will create a PDF file in CAFein/output/plots called Eigenfunctions_0.0_to_1.1.pdf. 
+In this PDF the newly calculated (unnormalized) complex eigenfunctions are plotted (in black) 
+together with those contained in the test suite example CAFein/input/test_suite/non_adiabatic_eigenfunctions/Output (in red). 
+If the ran were successful these should look the same (they overlap).
+
+**************************************************
+**** 3.3. — Non - adiabatic tidal eigenfunctions
+****        of a massive MS star
+**************************************************
+
+This test computes the tidal eigenfunctions for a 5Msun at z=0.018 on its Main sequence.
+
+From CAFein’s main folder, copy relevant input files
+
+> cd input
+> cp test_suite/non_adiabatic_tidal_eigenfunctions/acc_and_dim.dat .
+> cp test_suite/non_adiabatic_tidal_eigenfunctions/stellarModelFilesAddress.dat .
+
+Back to CAFein’s main folder, to run it
+
+> cd ..
+> ./CAFein
+
+It runs in about 15 minutes on my machine, printing "cazzo DONE" when DONE.
+************************************
+**** 3.3.1 — Plot the output
+************************************
+
+The folder CAFein/pythonScripts contains python scripts useful to visualize 
+the data. Here we use plot_nonAd_tidal_eigenfunctions_wholeStar.py, for non - adiabatic, tidal eigenfunctions. 
+
+From CAFein's main folder:
+
+> cd pythonScripts
+> python plot_nonAd_tidal_eigenfunctions_wholeStar.py
+
+This will create a PDF file in CAFein/output/plots called Eigenfunctions_0.0_to_1.01.pdf. 
+In this PDF the newly calculated complex tidal eigenfunctions are plotted (in black) 
+together with those contained in the test suite example CAFein/input/test_suite/non_adiabatic_tidal_eigenfunctions/Output (in red). 
+If the ran were successful these should look the same (they overlap).
+
+

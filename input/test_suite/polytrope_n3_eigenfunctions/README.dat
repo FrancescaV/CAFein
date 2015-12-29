@@ -1,9 +1,9 @@
-This test_suite compute the l=2 adiabatic eigenfunctions of a polytrope with index n=3
+This test_suite compute the l=2 adiabatic eigenfunctions of a polytrope with index n=3.
 Specifically, it computes the g5-eigenmode.
 
-To compute a different mode you need to change in acc_and_dim.dat:
+To compute a different mode you need to change the following parameter in acc_and_dim.dat:
 
-|eigenv_r. Real eigenfrequency 
+- eigenv_r. Real eigenfrequency 
 
 Other eigenfrequencies normalized by the star's dynamical timescale are:
 

@@ -1,0 +1,15 @@
+0 3.141592653589793115997963468544185161590576171875    |pi
+1 6.67428e-8      !G               
+2 6.9598e10       !cm_per_Rsun     
+3 1.9892e33       !g_per_Msun      
+4 5.9764e27       !g_per_Mearth    
+5 1.8986e30       !g_per_Mj        
+6 3.1558149984e7  !sec_per_Year    
+7 6.9911e9        !cm_per_Rj       
+8 6.37e8          !cm_per_Rearth   
+9 1.495978921e13 	!cm_per_AU      
+10 3.8418e33       !ergPerSec_per_Lsun  
+11 1.3806504e-16   !BoltzmannK     
+12 1.660538782e-24 !AMU            
+13 5.670400e-5     !sigma,stephan-boltzmann	       
+14 2.99792458e10   !c_light_cgs    

@@ -34,7 +34,7 @@ void readInputParams(const char *fileName,
 					 double &g_r_n_2_func, double &g_r_n_1_func, double &g_i_n_2_func, double &g_i_n_1_func, double &g_r_func, 
 					 double &g_i_func, int &tidesFlag_func, int &numStepsPspin_func, double &deg_m_func, double &deg_k_func, 
 					 double &M2_Msun_func, double &Porb_func, double &Pspin_min_func, double &Pspin_max_func, 
-					 int &deg_l_int_func, int &deg_m_int_func, int &deg_k_int_func, double &ecc_func)
+					 int &deg_l_int_func, int &deg_m_int_func, int &deg_k_int_func, double &ecc_func, int &WD_tides_flag_func)
 {
 	typedef vector<double> Row;
 	vector<Row> table;
@@ -131,6 +131,7 @@ void readInputParams(const char *fileName,
 	}
 	integratorFC_func			= static_cast<int>(table[34 + addLine][1]);
 	integratorFS_func			= static_cast<int>(table[35 + addLine][1]);
+    WD_tides_flag_func			= static_cast<int>(table[36 + addLine][1]);
 	
 	if(integratorRforV_func > 3|| integratorRforV_func < 0) 
 		errorMessageAndExit("readInputParameters.c", "unkown integratorRforV!");

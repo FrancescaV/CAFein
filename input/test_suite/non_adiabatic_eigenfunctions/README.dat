@@ -1,18 +1,21 @@
 This test_suite computes the non-adiabatic eigenfunctions of a 7Msun MS star
-at Z = 0.03. Specifically, it computes the p2-eigenmode.
+at Z = 0.03. Specifically, it computes the p2 - eigenmode.
 
-To compute a different mode you need to change in acc_and_dim.dat:
+To compute a different mode you need to change the following parameters in acc_and_dim.dat:
+
 - eigenv_r. Real eigenfrequency 
-- eigenv_i. Imaginary eigenfrequency. Neglected if #1 = 1
+- eigenv_i. Imaginary eigenfrequency
 
-R is permuted whenever it has a maximum when going 
-from the surface to the fitting point (we really care about the surface value).
-During the integration from the center to the fitting point R is permuted
-whenever ||R|| goes above the limit you set.
-For this reason, you can set the Riccati limit to whatever you want, 
-since it will only be read during the integration from the center to the fitting point.
-The Riccati elements Rij are always interpolated using Steffen.
+***************************************************
+*** Some details not critical for running the code 
+***************************************************
+R is permuted whenever ||R|| has a maximum when going from the surface to the fitting point
+(we really care about the surface value). During the integration from the center to the 
+fitting point R is permuted whenever ||R|| goes above the user-defined limit you set.
+For this reason, you can set the Riccati limit to whatever you want, and it will only be 
+read during the integration from the center to the fitting point. The Riccati elements Rij 
+are always interpolated using Steffen.
 
 If you want to do a plot like the one in Fig.4 in CAFein's paper, you must compute the
-eigenfunctions only from the fitting point to the surface (set flag 35 to 0)
+eigenfunctions only from the fitting point to the surface (set flag 35 to 0).
 

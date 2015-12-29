@@ -795,3 +795,16 @@ I moved the boundary by a bit to avoid the problem. I should comment that line f
 
 8/25/2015
 - Setting the pressure as integration variable. Computation of tidal eigenfunctions for test case goes from 15 mins to 9 mins...
+- Claned up input file
+- starting integrations on grail. 
+WD DIDN'T IMPROVE!
+
+Quasi-adiabatic equations? From a quick google search it looks like ppl used it in the past for WDs.
+
+
+12/29/2015
+- I downloaded CAFein's version on Github and the test_suite cases were giving problems.
+- I fixed the version on my machine and the various test_cases work. 
+- I added a README_CAFein_how_to
+- I re-computed the polytrope model requiring resolutionMesh = 1.0e-4, not to create a gigantic input file.
+The file I had used so far had resolutionMesh = 5.0e-5.

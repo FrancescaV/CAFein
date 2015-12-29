@@ -214,7 +214,7 @@ main (void)
 	Gsolar = G * Msun_toG/pow(Rsun_toCm, 3.0),
     moveOffset = 10.0;
 	
-	const int Willems2003Test = 0, WD_tides_flag = 0;
+	const int Willems2003Test = 0;
 	/***************************************************************	
 	 ***** Getting accuracies and various params from an input file.
 	 ***** 
@@ -232,7 +232,7 @@ main (void)
 	writeEigenfunctionsSkip = 0, integratorRforV = 0, 
 	integratorV = 0, integratorFC = 0, integratorFS = 0,
 	nonAdiabatic = 0, numStepsOmega_i = 0, permutationNumber = 0, 
-	counterIntState = 0, mesh_computedRij = 0, size_rkf45_state = 0;
+	counterIntState = 0, mesh_computedRij = 0, size_rkf45_state = 0, WD_tides_flag = 0;
 	
 	double 	deg_l_dbl = 0.0, h_init = 0.0, eps_abs = 0.0, eps_rel = 0.0, LimitToRiccati = 0.0, 
 	w_min_r_noDim = 0.0, w_max_r_noDim = 0.0, displaceEfreq = 0.0, eigenv_r = 0.0, eigenv_i = 0.0, 
@@ -278,7 +278,7 @@ main (void)
 					h_init_eigenfunc, eps_abs_eigenfunc, eps_rel_eigenfunc,
 					omegaR_n_2, omegaR_n_1, omegaI_n_2, omegaI_n_1, g_r_n_2, g_r_n_1,
 					g_i_n_2, g_i_n_1, g_r, g_i, tidesFlag, numStepsPspin, deg_m_dbl, deg_k_dbl, M2_Msun, 
-					Porb_minutes, Pspin_minutes_min, Pspin_minutes_max, deg_l_int, deg_m_int, deg_k_int, ecc);
+					Porb_minutes, Pspin_minutes_min, Pspin_minutes_max, deg_l_int, deg_m_int, deg_k_int, ecc, WD_tides_flag);
 	
 	numStepsOmega_r_dbl	= static_cast<double>(numStepsOmega_r); 
 	numStepsOmega_i_dbl	= static_cast<double>(numStepsOmega_i); 
@@ -2409,7 +2409,10 @@ main (void)
 					}
 					
 					//FIXME to erase if running with WD:
-					if (n==0 && nonAdiabatic){csi_final = csi_calc[endInterpol_rij-1];}
+                
+					if (n==0 && nonAdiabatic && (WD_tides_flag == 0)){
+                        csi_final = csi_calc[endInterpol_rij-1];
+                    }
                     
                     
 					while (fabs(csiRel - csi_final)>0)
