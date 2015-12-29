@@ -117,13 +117,15 @@ This will create a PDF file in CAFein/output/plots called Eigenfunctions_0.0_to_
 In this PDF the newly calculated (unnormalized) complex eigenfunctions are plotted (in black) 
 together with those contained in the test suite example CAFein/input/test_suite/non_adiabatic_eigenfunctions/Output (in red). 
 If the ran were successful these should look the same (they overlap).
-
+Note, the PDF shows the real and imaginary components on the left and right panels, respectively.
 **************************************************
 **** 3.3. — Non - adiabatic tidal eigenfunctions
 ****        of a massive MS star
 **************************************************
 
-This test computes the tidal eigenfunctions for a 5Msun at z=0.018 on its Main sequence.
+This test computes the tidal eigenfunctions for a 5Msun main sequence star with z = 0.018.
+The calculation is similar to the one presented in CAFein's instrument paper. 
+Details on the binary companion can be dig out from acc_and_dim.dat
 
 From CAFein’s main folder, copy relevant input files
 
@@ -153,5 +155,14 @@ This will create a PDF file in CAFein/output/plots called Eigenfunctions_0.0_to_
 In this PDF the newly calculated complex tidal eigenfunctions are plotted (in black) 
 together with those contained in the test suite example CAFein/input/test_suite/non_adiabatic_tidal_eigenfunctions/Output (in red). 
 If the ran were successful these should look the same (they overlap).
+
+
+************************************
+************************************
+**** 4) Useful notes
+************************************
+************************************
+- To decrease the size of the output files, increase the parameters writeEigenfunctionsSkip 
+in acc_and_dim.dat
 
 
