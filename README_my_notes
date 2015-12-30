@@ -1,0 +1,810 @@
+/*
+ 
+ //FIXME change tablePoly with some other name?
+ 
+ 
+ 05/28/11: The code now calculates the eigenfrequencies of a polytrope with high accuracy.
+ I've done the tests to check the stability (changing center, fitting point, accuracies).
+ 
+ - implemented Jacobian
+ - Jacobian tested. Eigenfunctions calculated with different integrators (some of them requiring the Jacobian)
+ agree.
+ - during integration of Riccati alone, store infos about permutations to be used during integration
+ of eigenfunctions.
+ - Eigenfunctions and Riccati integrated together. The center is giving me troubles (Riccati integrated inward and outward from fitting point to
+ center disagree very close to the center).
+ 
+ 06/07/11: I tried using different integrators, and still I can't integrate Riccati inward all the way to the center.
+ - Printing on an output file the radial displacement  = y1*x^(l-2)*x.
+ - The problem at the center could be solved by reading in input riccati close to the center instead of calculating it.
+ 
+ 06/09/11: added the option to read riccati in input when integrating from xFit to the center. To avoid problems with Steffen interpolant, 
+ during the integration of the eigenfunctions the center is moved by a center+center/100.
+ 
+ 06/21/11: rescaling the radius to relative radius, so that it goes from 0 to 1. This will help once I read in input the real model.
+ Adding calculation of normalization...
+ 
+ 06/23/11: Calculation normalization added. Adding overlap integral.
+ 
+ 07/06/11: Corrected normalizations. Unno's spherical harmonics are normalized, so equation 5.17 in Bart's thesis doesn't need
+ normalization in front of it. 
+ Added f-modes eigenfunctions needed to calculate "c_0 = <csi_0 | csi_alpha >" according to Fuller-Lai eq. 25
+ 
+ 08/01/11: Back from vacations! Now re-doing the calculation of normalization and tidal overlap integral.
+ - changed density label in eigenfunctions output file.
+ 
+ 08/02/11: 
+ - changed the subscript _vec in _model to denote the variables taken from the stellar model.
+ - Added file eigenfunction_operations.c
+ - Added routine calculateNormalization in eigenfunction_operations.c to calculate the normalization Ns.
+ - Added routine orderRadius_CsiR_CsiH in eigenfunction_operations.c to read the eigenfunctions in an ordered way.
+ - rewritten dimentionless density as rho/(M/(4/3)piR^3))
+ - Added calculation of Q and of c0 mentioned in Fuller-Lai. I calculated c_0 < Q.
+ - rewritten dimentionless density as rho/(M/4piR^3))
+ 
+ 08/09/11: 
+ - the way I was reading in input r_ij when calculating the eigenfunctions has a problem, specifically close
+ to the interval boundaries. To solve the problem:
+ - I don't use Steffen anymore to interpolate r_ij, but simple linear interpolation
+ - For each sub-interval across which I am integrating, I am adjusting the end integration extreme
+ in order not to end up in the wrong range while interpolating r_ij.
+ - I added the function calculateInterpolated_rij to the file eigenfunction_operations.c, where I calculate r_ij from
+ linear interpolation and fill in matrix R that way. 
+ - The above procedure is now implemented inward and outward. To speed it up I can use bisection to find the root.
+ - orthogonality check is fixed ==> make sure that the f-mode and the g-mode have the same beginning and end.
+ 
+ 08/14/11: Bug found: modified the way permutations are stored while calculating the eigenfrequencies. 
+ 
+ 08/17/11: Fixed the way U is calculated in the code that creates the input WD models. Now the eigenfunctions look fine.
+ 
+ 08/18/11: Correcting the way I am calculating the integrals for normalization and tidal coupling ==> Using now the trapezium rule
+ - FIXME: add error estimate to the trapezium rule?
+ 
+ 
+ 09/13-14/11: Cleaning up the code. 
+ - erased factorial routine, which I don't need.
+ - more general way of doing row by column matrix matripication implemented. 
+ - more general way of doing matrix by vector multiplication implemented.
+ - erased routine get_matrix_elements_at_once. I only use it once.
+ - GSL routines to calculate inverse and determinant of matrices implemented.
+ - both RiccatiMatrices_operations.c and matrix_operations.c have been modified to
+ be more general in terms of size of the matrices. The equations in RiccatiMatrices_operations.c still need to be changed.
+ - added IOfiles.c where I put some of the operations I do on the output files (i.e. writing labels) 
+ 
+ 09/15/11
+ - generalized the way Rij are interpolated when integrating the eigenfunctions
+ --> now it is not size dependent anymore.
+ - Adiabatic Riccati matrices extended from 2x2 to 3x3 with U = (y1, y2, y5) and V = (y3, y4, y6), 
+ the calculated eigenfrequencies agree with the one calculated with 2x2 Riccati matrices
+ 
+ MISSING: to calculate the eigenfunctions, to read initial conditions for eigenfunctions from a routine (?), correct jacobian, and add extra integrator for immaginary part.
+ 
+ 12/04/11
+ EIGENFUNCTIONS FIXED 
+ - Now csiRel inside the integrator is forced to be within the integration interval (i.e. avoiding numerical errors at the 16th decimal place)
+ - Keeping the same initial conditions as before for the eigenfunctions (like when I was integrating only 4 equations) the results agree with 
+ the version of the code updated up to 08/18/11 (eigenfunctions overlap).
+ 
+ Next: add another integrator for the immaginary part, maybe pick a different fitting point? Either BV or lamb frequency (i.e. I can't run the f-mode for l=4 of polytrope)
+ 12/05/11
+ - Orthogonality fixed: I had to fix the way the eigenfunctions were read, as the columns of eigenfunction.dat have a new format.
+ - Error messages written in IOfiles.c
+ 
+ 12/10/11
+ Jacobian fixed.
+ 
+ 12/10/11
+ if R is a 2x2 it means I am adiabatic ==> no real and immaginary part, but only real!
+ Added an extra loop for real and immaginary part, and an extra output file at the fitting point. 
+ Now learning how to use MESA!
+ 
+ 1/13/12
+ - Added also Lamb frequency as a variable to decide the fitting point. It is usually used at high frequencies.
+ 
+ 1/20/12
+ - Setting up the complex integrator.I have to simultaneously integrate the real and immaginary part of 
+ each y_i. This time I have to loop on two different omega. Real(omega) and Immaginary(omega). 
+ For this reason I got rid of the loop real/complex I set up on  12/10/11.
+ 
+ 1/22/12
+ - setting up 2 Riccati matrices (Real R and Imaginary R): I renamed the Riccati matrix already in use to denote it as real and
+ added an immaginary Riccati matrix that for now contains the same equations as the real part.
+ 
+ - Modified the beginning of the code so that if adiabatic equations are integrated, 
+ rowsRic is set to 2 authomatically (3 for non adiabatic),
+ 
+ - Started the modification of the eigenfunctions. For now, I can recover the g-mode of the mesa model
+ when running with both the adiabatic flag set to 1 (nonAdiabatic == 0 ) and 0 (nonAdiabatic == 1 ). 
+ For the latter, in order to compare with the computed g-mode I have to get rid of the null columns
+ when writing the eigenfunctions on file.
+ 
+ 1/25/12
+ - Eigenfunctions FIXED
+ 1/28/12
+ Problems with Jacobian:
+ - First, I found a bug. When interpolating r_ij I wasn't recalculating the interpolated r_ij at each time step INSIDE the Jacobian.
+ (later on it turns out it doesn't matter)
+ - Another bug found ==> I was NOT resetting the integrator after each permutation of the eigenfunctions!!!!!!
+ - Higher order eigenfunctions are noisy at the interface between two different permutations 
+ (this is not happening if R  is integrated with rk4 or if R is integrated together with the eigenfunctions). 
+ This is due to poor resolution in the calculated r_ij with bsimp (resolution OK with rk4) and it thus creates problem when
+ interpolating r_ij in the calculation of the eigenfunctions
+ Recall that interpolating R when calculating V is advantageous cause the integration of R from fitting point to star's boundaries
+ might give troubles close to the star's boundaries.
+ Solutions?
+ - if I am integrating R and V together then there are no problems.
+ - if I am interpolating R while integrating V (with bsimp) I can:
+	- increate accuracies for integrators
+	- limit "h" (timestep) to be below a certain value when integrating R 
+		==> this should give enough resolution for interpolating R during the integration of V, but it increases the running time.
+		
+ ==> added more controls in acc_and_dim.dat.
+ 
+ 1/30/12
+ 
+ trying to improve the code I added few more controls for the timestep to be used if integrating R and V at the same time and if integrator is bsimp.
+ 18  1       	|manageTstep == 1 it plays with the timestep h of R integration according to #19 - #22. == 0 timestep is set by integrator authomatically and #19 - #22 are neglected.  THis controller is suggested if the eigenfunction looks not-too-continuous at boundaries between permutations (Suggested if #15==1 and the integrator used is bsimp)
+ 19  2       	|steps to skip for constant timestep. Each n-steps during the integration the timestep is set to a constant value (the smaller the better/slower). To set with #20 or #21
+ 20  1000       |steps for which the timestep is kept constant after each permutation (it can be VERY big for h constant throughout). To set with #19
+ 21  1.1       	|if normR > n*normRminimum (for a given permutation) the timestep is set to a constant value. To set with #19
+ 22  1.0e-6     |hLimit. Fixed h to use during Rij integration (1.0e-6 suggested). 
+ 
+
+ 2/2/12
+
+ - I am finally done fixing the Jacobian. Not sure if I should be worried, but adiabatic and non-adiabatic runs are slightly different when the Jacobian is used.
+ More tests on it tomorrow. 
+ - To make the integrator run more smooth I changed the form of the equations I am integrating (integrating R only, versus integrating V only). 
+ Basically, instead of setting the derivatives to zero, I just integrate the same equations that are already there. Everything is explained in the integrator file.
+
+ 2/3/12
+
+ - I checked eigenfrequencies and eigenfunctions and everything seems fine.
+ - I have also cleaned up the code a bit, adding for-loops on the real and imaginary part.
+ - I have added real and imaginary ABCD and changed one routine in the code trying to speed it up (instead of creating ABCD one by one, I create them all at once)
+ - Put final equations!!!!
+ 
+ 2/8/12
+
+ - I found out the equations for the real and imaginary part are not independent ==> re-modify the code to account for that
+ ==> Now the non-adiabatic Riccati matrix is 6x6, while the matrix hosting the permutations (T) is 12x12.
+ To avoid doing 12! permutations I just permute the real part of the riccati equations and apply the same permutation to the imaginary
+ part. 
+ - Found a bug when I invert a matrix. If the matrix is > 3x3 I am using some GSL routines to calculate the inverse ==> never try
+ to calculate the inverse of a matrix over-writing the matrix. 
+
+ 2/11/12
+ 
+ - fixed jacobian
+ - eigenfrequencies OK.
+
+ 2/13/12
+ 
+ - Fixed eigenfunctions
+ - After a few tests, R = 6x6 and bsimp with R integrated together with V was not converging (taking forever)
+ - I calculated the WHOLE Jacobian with mathematica and hardcoded it ==> still the same
+ - I realized that the Jacobian introduces numerical noise. I fixed it by:
+	- imposing f[i] == 0 if |y[i]|>0 && |y[i]|<1e-15 inside the integrator
+	- imposing y[i] == 0 if |y[i]|>0 && |y[i]|<1e-15 inside the integrator while loop
+ 
+ 2/15/12-- 2/20/12
+ 
+ - Adding proper equations!
+ - I added all the variables needed for the non-adiabatic terms.
+ - Note input file slightly changed (from run to run in MESA), so the results are not exactly the same as before.
+ - Changed matrices ABCD and boundary conditions for eigenfrequencies
+- Added nonAdiabatic initial condition for the eigenfunctions. 
+I tested it both on the eigefrequencies and eigenfunctions (for R=6x6 I kept the same configuration of ABCD used for the adiabatic one, setting the extra terms to zero and integrating more equations) and it seems to work fine.
+ 
+ 2/21/12
+ Using now fully non adiabaic equations but still keeping omega_i = 0 following Gautschy procedure for finding the eigenfrequencies.
+
+ now using the total Riccati norm to decide if a permutation must be applied
+ 
+ 2/22/12
+ - performed stability tests with version v11. Changing the limit to normR, the integrator, and the accuracy of the integrator makes only a slight difference.
+ - Getting rid of resetting the derivative to zero inside the integrator if the number becomes to small, and setting to zero Rij if Rij becomes too small. It does not make sense.
+
+ 2/23/12
+ - introducing the calculation of the determinant of the complex matrix R. At the fitting point I recalculate the matrix of the difference
+ summing the real and imaginary part of each component. I then calculate the real part of the determinant and the imaginary part. 
+In fact R is a squared matrix with submatrices of the form {{Rrr,Rri}, {Rir, Rii}}, where Rii is real. Since I am not sure if I have to sum Rrr and Rii
+ or subtract them, I do both calculations and check which one makes more sense later on.
+ - To calculate the new determinant I create a new routine in matrix_operations.c
+
+ 2/25/12
+ -adding the imaginary omega in a loop
+
+ 2/29/12
+ - change input file acc_and_dim.dat to make it more organized.
+- implemented the secant method to look for an eigenfrequency. The input file  acc_and_dim.dat changed to include more parameters needed for the secant method.
+ 
+ 3/5/12
+
+ Working on the eigenfunctions....
+ - included imaginary omega in acc_and_dim.dat as an eigenfrequency to read. 
+ - Bug inBCs found. In the BC at the center (for eigenfrequencies calculation), r11 and r44 were set in such a way that r11=-r44, when they're actually the same.
+ - to make sure I didn't fuck up the code I recalculated the eigenfrequencies of a polytrope and they look good.
+ - dynamic Riccati limit
+ 
+ 3/7/12
+
+ - added dynamic limit to Riccati:
+ set it low, say 2. When permuting, if the minimum norm found is > riccati limit, then move riccati limit by one.
+
+ 
+ 3/10/12
+
+ - during integration of Rij I changed the condition at the fitting point from 
+ if (csiRel == csi_final) to  if (fabs(csiRel - csi_final) < 1.0e-16)
+ 
+ 3/11/12
+ - I have re-calculated the real and imaginary part of the Riccati matrix (see logbook) and changed the
+ determinant of the complex riccati matrix (R_in - R_out) at the fitting point accordingly.
+ - I had troubles running on the cluster the eigenfrequencies at accuracies 1e-12 when looping on omega_i and going too low in omega_i. 
+ To solve the problem just give an initial timestep bigger than the accuracy requested (i.e. 1e-8 or 1e-10 should make it)
+ 
+ 3/13/12
+ - Fixed initial conditions eigenfunctions. R 6x6 can be divided in 3x3 submatrices: R00, R01, R10, R11. 
+ For construction, I expect R00 = R11 = Rreal and R10 = -R01 = Rimaginary, but in real life I have that numerically they are slightly different. 
+ I am forcing them to be the same when setting the initial conditions of the eigenfunctions.
+ 
+ - normalizing the initial condition of the eigenfunction to 1 (the eigenvector in null space has norm 1).
+ 
+ - implemented the secant method to look for a root different than zero. The equations are much nastier now. 
+ Termination conditions: step in omega real and imaginary < 1e-10 OR |determinant - root|<1e-15 both for real and imaginary component.
+ 
+ 3/15/12
+ - implemented integrator for R only with Jacobian as well
+ - added "adiabatic" variable, just because it might be useful.
+ - implemented integrator for V only (R interpolated) with Jacobian as well
+ - Cleaned up linear interpolation of Rij. R 6x6 can be divided in 3x3 submatrices: R00, R01, R10, R11 such that R00 = R11 and R01 = -R10.
+ Now I interpolate only part of R using these equalities to fill in the rest.
+ - Implemented Steffen interpolant to fit simultaneously r00.....r05, r10......r15, and r20......r25 in the non
+ adibatic case. This time, I give in input the range I want to fit.
+ 
+ - When finding the extremems on where to perform  interpolation I now break the loop once I find the correct index
+
+ 3/15/12
+ - implemented extra integrator for refining the calculated Rij with rk4
+ - implemented Steffen to calculate interpolated riccati components
+ - implemented bysection method in linear interpolation
+ - keep timestep constant in Rij for n timestep after permutation
+ - refining calculation of Rij at the last two steps of every permutation
+ - in calculation of U and V R is interpolated at the boundaries with linear interpolation and with steffen in the middle
+ 
+ 
+ 3/24/12
+ - found a bug in Steffen interpolant. Specifically, I was screwing up the way the SIGN of a number is calculated.
+ This was creating problems when interpolating a constant function. Now I implemented a proper (and stupid) way of calculating 
+ the fitting coefficients.
+ - Both the Steffen used to interpolate the stellar model and the Riccati coefficients has been fixed.
+- corrected typo in non adiabatic equations... 
+
+ 3/29/12
+ - I started writing an explanation for each routine.
+ - I added to the file containing the riccati components calculated inward and outward the imaginary eigenfrequency.
+ - In the routine used to calculate the product matrix x vector I used to create and distroy a vector every time I was calling that routine. 
+ Now I create the vector in the main code and give it in input.
+  
+ 
+ 4/6/12
+ - re-wrote the secant method, just to make sure.
+
+ 4/7/12
+ - the imaginary part of the eigenfrequecy can actually be negative, but the previos version of the code was only taking in input log(omega_i^2), which converted in omega_i
+ always gives a positive omega_i.
+==> I changed the input quantities in acc_and_dim.dat referred to looping on omega_i --> now I give in input omega_i and not the logarithm of omega_i^2
+==> to be consistent, I changed the input quantities in acc_and_dim.dat referred to looping on omega_r as well and the input quantities referred to the eigenfrequencies to be used to
+ calculate the eigenfunctions.
+ - Using rk4 both during the calculation of the eigenfunctions and the use of the secant method.
+ - If the secant method is used, the eps_abs and rel are authomatically set to 1e-12.
+ - added flag "writeR_unpermuted" to acc_and_dim.dat. If set to 1 the unpermuted riccati components are written on an output file. If you want to use it, do it when calculating the eigenfunctions.  
+ - Fixed adding mesh points close to the fitting point: I added refineMeshAtFit_SF and refineMeshAtFit_CF flags. Points are added whenever those flags are 1 (the condition on the timestep only I was using
+ before was not always satisfied).
+ 
+ 4/11/12
+ - added flag integratorRforV to pick the integrator to use when calculating R before integrating V
+ - added flags to pick across which interval to perform the integration: FS (fit-surface), FC (fit-center) or both.
+ - added flag integratorV to pick the integrator for V.
+ 
+ 
+ 4/12/12
+ - added file initialConditions.c, which contains the IC for the eigenfrequencies.
+ - increasing matPermInfo_# by one to add the permutation numbermatPermInfo_#
+ 
+ - CLEAN UP THE PART I ADDED ABOUT THE INTEGRATION WITH ALREADY CALCULATED C and D???
+ 
+ 04/27/12
+ - added an new file to read input parameters (readInputParameters.c) and cleaned the code up. 
+ - I have also modified the way I give the initial conditions for the integration of R. Instead of doing all the selection in the code, 
+ I do it in the initialConditions.c routine.
+ THis is the ONLY difference with the previous version of the code, but I keep them both just in case.
+ 
+ 
+  05/6/12
+
+- Impleneted tidal terms and initial conditions on Rij both adiabatic and non-adiabatic.
+- added tidal terms and some variables shortcuts to the equations of ABCD (adiabatic case only)
+- added routine for picking the initial permutation matrix at the star's boundaries (adiabatic and non adiabatic...but check)
+- corrected matrix of possible permutations for the adiabatic case
+- added initial conditions eigenfunctions in external routine (adiabatic only)
+- still missing Jacobian
+- fixed IO file for eigenfunctions (adiabatic only)
+
+ 
+ 05/09/12
+ - I moved the handling of the loops on omega_r and omega_i inside readInputParameters.c
+ - I keep this version as it is: it works for only 1 loop on the spin period.
+ - I have to start moving the memory allocation around. To avoid screwing up I start from a new code.
+ - I moved things around.
+ - I have introduced a new output file that contains the eigenfunctions at the surface...(ACTUALLY I ONLY NEED THE SURFACE!??!)
+ - In case an extra loop is added to refine the search, then make sure you re-set to zero the matrix of the permutation info that will store the actual matrix of the permutations, 
+ and the counter of the permutation that is read inward and outward.
+ 
+ 
+ - For some runs the code crashes because:
+ 		- when I pass the limit to ||R||, I increment the counter of the permutations applied, but I still do not have a csiInitial and csiFinal in my permutation matrix 
+ 		  corresponding to that new permutation.
+ 		- at the same time I happen to be at the fitting point, so that extra line is never incremented cause the while loop of the integrator ends.
+ 		I solve the problem by checking that when the riccati norm is close to the limit, the integrator is not already at the fitting point.
+ 
+ 
+ 05/11/12
+ I added a bunch or routines in TidalParameters_operations.c to calculate some of the parameters
+ needed to calculate the orbital evolution timescale da/dt according to Eq. 54 in Bart's last paper.
+ 
+double calculate_LegendrePol_Plm0
+double calculateFourierCoeffs_Clmk
+double calculate_Glmk_2
+double calculate_Flmk
+double calculate_dAdT_tides
+double calculate_dAdT_GR
+
+although the last one is not really a tidal parameter....
+
+ - Implementing tides in non-adiabatic configuration.
+- added tidal terms to the equations of ABCD
+- corrected matrix of possible permutations for the non adiabatic case. I do not permute y7 and y8
+- fixed IO file for eigenfunctions to handle both adiabatic and non adiabatic
+- added initial conditions eigenfunctions in external routine
+
+- adding the normalization of the eigenfunctions in such a way y8 = 1 in case tides are applied. 
+A new file is created eigenfunctions_y81atSurf.dat. To normalize the eigenfunctions I added a new routing in eigenfunction_operations.c called normalizeEigenfunctions_y8to1atR.
+
+05/17/2012
+
+- added proper calculation of the timescales accounting for the complex form of Flmk. 
+I am using GSL routines that can handle complex numbers to calculate the modulus and argument of Flmk.
+- added spin timescale, which required the addition of the moment of inertia
+
+- adding the calculation of WKB wavenumber. I put it in an external file so that I don't have to do a fit of N2 (which very close to the surface becomes negative.)
+ if it doesn't run check:
+ - initial permutation matrix
+ 
+ 
+ 05/31/2012
+- To the file containing the calculation of the WKB wavenumber, I added the pressure scale eight and the size (if any) of the radiative region on top of the convective region at
+the star's surface. This will be use to check linearity.
+ 
+ 06/12/12
+ added in output the phase as well to understand the direction of the tidal eigenfunction with respect to the tidal potential.
+ 
+ 
+ If on the cluster if doesn't reach the fitting point either inward or outward, just lower the initial accuracy during the calculation of R. it will go back to 1e-12 anyway
+ 
+ - tips to make it faster: when creating Riccati equations, notice that Arr = Aii and Ari = -Air (same for ABCD) and break the matrix multiplication that way in 2 3x3 instead of a 6x6
+ - print initial condition eigenfunctions even before the while loop?
+
+ - recheck the test case, but integrating this time also the third component in the matrix. substitute it with something known (i.e. r00, r01, r02)
+  
+ - change inward outward flag to something more meaningful (surfaceToFit or viceversa.)
+
+ - allocate h, s and dy for steffen interpolant of the stellar model.
+ 
+ - get rid of parameters not used in integrator from params_integrator.h
+ - get rid of manage tStep parameters that are not used
+ */
+
+08/16/2012
+The way I calculate the pressure scale heigh in the file that creates the input model ha the units wrong. 
+That is used to check whether the WKB approx is a good enough assumption, so I want to compare it with the WKB wavenumber kr calculated in the code. 
+Also Kr is wrong, since the equation I am using is just an approximation. The correct way to do it is to just calculate the pressure scale heigh from 
+lambda_P = P/(g*rho) with all the units as given by the code. The resulting lambda_P is in [R].
+For the WKB wavenumber, I obtain it with the same units of lambda_P (precisely, 1/Kr has dimensions of [R]) if I use the following equation:
+
+Kr^2 = (N^2 - w^2)* (L^2 - w^2)/(w^2*c_s^2)
+
+w = tidal forcing frequency dimensionless calculated in the code
+N = BV frequency dimensionless as given by input model
+L = lamb frequency dimensionless as given by input model
+c_s = calculated from sqrt(Gamma1*P/rho) with Gamma1, P and rho as given by input model 
+If runs crash on cluster it might be due to the memory required for MAX_NUMBER_INTEGRATIONSTEPS
+
+08/20/2012
+- In the routine that reads the input files and stores the elements in a vector<vector<double>> I wasn't really closing the file....now I fixed it.
+- in routing calculate_dAdT_tides, the argument of Flmk runs in the interval [0, 2pi) instead of (-pi, pi]
+
+
+08/29/12
+
+- removed print out of WKB wavenumber
+- added file with global properties of the system for each run
+- created a new routine to print out the eigenfunctions where I removed all the Riccati coefficients and I added some unperturbed stellar quantities
+taken from the model. Everything is dimensionless unless otherwise specified.
+
+08/31/12
+- added the general equations for the Fourier coefficients and Glmk_i for an eccentric orbit.
+- Now the secant method is automatic: if adiabatic == 0 and detailedRiccati == 0 the secant method is applied when the det(R_in - R_out) crosses zero. 
+Recall to set to zero the initial and final w_i to avoid looping on the imaginary eigenfrequency and to give a narrow range for w_r to start with.
+
+11/01/2012
+
+- added extra input file for giving the address of the model externally
+
+12/12/12
+
+- turned off the automatic secant method (commented the lines in the file). This is what CAFein_test12122012 on fugu is.
+Suggested accuracies:
+- for secant method, AT LEAST 1e-12
+- for non adiabatic + tides, AT LEAST 1e-12
+
+Add new flag to set suggested accuracies...
+
+01/17/2013
+
+- added file numericalIntegration.c which contain a routine to compute integrals according to:
+GILL, P.E. and MILLER, G.F.
+An algorithm for the integration of unequally spaced data.
+Computer Journal 15, pp. 80-83, 1972.
+
+- added a new function (orderEigenfunctionElmnts) in eigenfunction_operations.c to order the elements of the eigenfunctions
+once they are stored in a matrix. The routine spits out a new matrix where the elements are ordered from 
+the center to the surface.
+
+The two above are used to calculate the orbital evolution timescales according to bart's semianalytical prescription.
+
+- created new routine calcInnerProduct in eigenfunction_operations.c. This used to be the routine to calculate the normalization
+of the eigenfunction during the orthogonality check in orthogonalityTest.c
+This routine now computes the inner product of two eigenfunctions and can be used both for normalization and to compute
+the orthogonality condition.
+
+- orthogonalityTest.c now uses orderEigenfunctionElmnts to order the elements of the eigenfunctions.
+
+
+TO DO: implement new integrator routing also for Clmk and Glmk and the moment of inertia of the star and double check that the integral is fine.
+
+02/02/2013
+- CAFein wasn't conserving angular momentum cause the constant G in solar units used in the main file was hardcoded, 
+while G used in the timescales routine (in TidalParameters_operations.c) was computed from G in cgs using solar mass and radius. 
+Now I am computing it from G in cgs both in CAFein.c and TidalParameters_operations.c.
+
+- added a flag Willems2003Test, to set the spin of the star equal to 0.5 Omega_orb_periastron.
+
+03/18/2013
+Fixed the normalization of the eigenfunctions at the end of the computation.
+For the ICs at the fitting point I was using before (y8real  =1, y8imag = 0) and since the derivatives of y8 are zero, this bug didn't affect the 
+calculation. However, I was normalizing the eigenfunctions in the wrong way. 
+I now fixed it by applying a rotation in the complex plane. I fixed both the part in CAFein.c where I normalize the eigenfunctions at the surface
+and the routing in eigenfunction_operation.c, where I normalize the whole file eigenfunctions.dat.
+
+I still need to check properly whether the IC affect the computation, cause the numbers are slightly different changing the ICs and it doesn't seem 
+to be numerical noise.
+
+
+Also, I am using two different equations for the moment of inertia, and compute it using the trapezium rule. 
+I have to implement a proper integrator.
+
+Also, I need to check whether now the code works in the adiabatic configuration.
+
+
+03/27/2013
+- implemented computation of moment of inertia with Gill Miller integrator
+- I also added the dimensionless moment of inertia
+- All the quantities that used to have units are now dimensionless and I put the units back in at the very end of the calculation.
+I re-ran an example of a hot Jupiter and a star and it doesn't make that big of a difference. DAMN!!!
+
+03/28/2013
+- fixed computation of eigenfunctions, at least for the p2 mode of the 7Msun star at Z = 0.03. 
+I added a test_suite case in the input folder with the input file and CAFein.c. The results didn't make sense cause I was plotting
+the wrong thing with IDL. Now everything seems to work fine.
+
+
+04/04/2013
+3 bugs found in surface boundary condition to tidal problem.....
+
+04/07/2013
+- bug found in routine find_permutation_with_minNorm for the case non-adiabatic+tides. 
+There I keep fixed y7 and y8 and only permute the real part of M, then I apply the same permutation to
+the imaginary part. However, I was setting the position of the "1" associated with y8_real wrong (originally set to 11). 
+This was resulting in a permutation matrix T with multiple 1 on the same columns, and no 1 on other columns. 
+However, when GSL was trying to invert such matrix I was getting singular matrix error, so overall the results should not be affected, 
+as the run was crashing in that case. If the run was going through it meant I was applying a permutation with no errors.
+
+
+04/08-09/2013
+I finally fixed the issue of having to present a maximum size for the vector storing the Riccati element to be
+interpolated during the computation of the eigenfunctions. 
+First, since in the adiabatic case I always use linear interpolation, I refined a new table containing
+the riccati elements to pass in the adiabatic case. Then,
+I separated the header to pass the parameters to the integrator in 3:
+
+- params_integrator_adiabatic contains the parameters to pass in the adiabatic case
+Here I am only passing the table containing Rij and the star's radius to perform linear interpolation
+The element for Steffen interpolation are not needed
+
+- params_integrator_R_nonAd contains the parameter needed to the calculation of Rij in the non-adiabatic case. 
+The table containing Rij and the elements for steffen interpolation are not needed
+
+- params_integrator_V_nonAd contains the parameter needed for the calculation of the eigenfunctions.
+I moved the definition of this structure right before the computation of the eigenfunctions when I know
+how many riccati elements I computed in and out. 
+This way, I use the actual size instead of having to pre-set a maximum size.
+
+- giving the conditions for v3 and v7 at the fitting point in the input file
+
+********************************************************************************
+NOTE. I RAN THIS VERSION OF THE CODE AND THE PREVIOUS ONE ON THE SAME TEST_SUITE 
+(non-adiabatic eigenfunctions) AND I GOT EXACTLY THE SAME RESULTS.
+This provided that the things I normally play with are the same. An example is:
+
+if(nonAdiabatic)
+	if(csiRel > 0.97){LimitToRiccati = 1.0e16;}
+	
+where I decide where to force the limit to ||R|| to be huge.	
+
+
+04/16/2013
+
+- Computing the initial conditions of the eigenfunctions at the
+fitting point via single value decomposition of R_diff.
+
+- found a bug in steffen interpolant for interpolating Rij...
+I was computing wrong the derivative at the zero-th element
+
+04/17/2013
+- cleaned up some of the IO operations performed during the calculation of V
+instead of having inward and outward flags, I added (1-n) and n to the inward and outward parameters
+(n=0 from fit to surface and n=1 from fit to center). This I got rid of a bunch of lines
+
+
+04/19/2013
+modified the way I compute the riccati elements INWARD if I am computing the non-adiabatic tidal eigenfunctions
+(still needs to be tested without tides)
+I store 3 consecutive riccati elements and their norm (el1, el2, el3). 
+If the norm has a maximum I re-start the integration from el1 and then apply a permutation. 
+This way, the riccati limit is set inside the code and a permutation is applied every time the norm has
+a maximum. 
+This way, steffen interpolants is the method that gives the lowest numerical noise.
+The results are good if rk4 is used both for R and V.
+
+
+- avoid printing out surface values if it doesn't reach the surface!!!!
+- add omega_R to timescales file
+
+
+06/13/2013
+
+- in the non adiabatic case without tides, I tried computing the initial conditions of the eigenfunctions at the
+fitting point via single value decomposition of R_diff. I tested in on the p2 mode of the 7Msun star used in Fig. 4 of 
+CAFein's paper and compared the results with whatever I was doing before (computing the IC by hand). 
+Reproducing Fig.4 of CAFein's paper, the real components stay exactly the same, while the 
+imaginary components change a bit (minima and maxima remain at the same locations, but the amplitude is slightly different).
+
+07/09-10/2013
+
+I have introduced a new variable 
+gsl_odeiv_system sys_Riccati_R_toUse;
+This way, I can skip the if....else loop within the integrator, and decide which gsl_odeiv_system to use right outside the 
+integrator loop.
+
+- RUNNING THE NON ADIABATIC TEST_SUITE.
+- RUNNING THE POLYTROPE TEST_SUITE
+- Missing to run the tidal test suite. Folder i ready though
+
+- Getting rid of WD flag. If I use the integrator state from rkf45 to compute the fitted Rij I need
+all data points
+
+- added integratorRforV == 3, which corresponds to using rkf45 for the computation of Rij.
+- added matrices and vectors to store the state of the integrator 
+- added output files storing the rkf45 state both for the interval fit-center and fit-surface
+- also added couple more routines to write rkf45 state in output. 
+
+- read rkf45 state file
+- I got rid of the flag : writeR_unpermuted. I wasn't using it anyway.
+- store rkf45 state in vectors
+- move it in vectors ordered from fit to the star's boundaries
+- getting rid of linear interpolation flag "linearInterpolation". In the adiabatic case I use LI by default, while
+in the non-adiabatic case i always use Steffen. In the interval fit-center steffen might no be appropriate, but in any case
+I don't care, since in the tidal case I need the parameters at the surface.
+
+- in readInputParameters.c I force integratorRforV and integratorV= 1 (rk4) in the adiabatic case
+- added integrator rkf45 option for eigenfunctions (integratorV can be = 3)
+- Routine to compute the fitted Rij using rkf45 state done. For the parameters k1 and k6 extracted by rkf45 state, 
+I use the same properties of simmetries used for Rij
+- I ran an example with tides and it worked! I added the test to the test_suite folder. 
+The example comes from the tests I added to CAFein's paper about Polfliet and Smeyers '90 paper.
+- I ran a random WD case, BUT with 1eM12 accuracy...I need higher.
+
+07/11/2013
+
+- During the calculation of the eigenfunctions, I created two separate routines, one for rk4+steffen and one for rkf45+rkf45-state.
+This is to avoid too many if...then... statements inside the integrator that might slow the code down. 
+I also created two separated structures to pass the variables to the integrators.
+
+	- tested it on non adiabatic tidal eigenfunctions test_suite->OK
+	- tested it on non adiabatic eigenfunctions test_suite->OK
+	- tested it on non polytrope test_suite->OK
+
+- In the non-adiabatic func_Riccati_Ronly routine, I was setting to zero in a for loop some variables that were computed right after.
+I got rid of it, hoping to speed the code up.
+
+	- tested it on non adiabatic tidal eigenfunctions test_suite->OK
+	- tested it on non adiabatic eigenfunctions test_suite->OK
+	- tested it on non polytrope test_suite->OK
+
+- During the calculation of Rij, I set Rij to zero when below 1e-16, but this is not consisted with rkf45 approach, 
+since the interpolation coefficients given by the integrator state do not account for it (to compute the interpolated
+Rij, I use both the integrator state and the computed Rij).
+As of now, in the nonAdiabatic+tides case I do not set to zero Rij when below 1e-16, but this leads to 
+several if statements inside the integrator, which might slow things down.
+I modified the code to set to zero Rij when below 1e-16 ONLY in the adiabatic case. The results for the non-adiabatic
+eigenfunctions look good to me. 
+	- I tried rk4 for both R and V, and compared the results with the old one.
+	The real eigenfunctions do not change, while the magnitude of the imaginary ones change a little.
+	- I tried rkf45, and compared with rk4. The magnitude of the imaginary components change a little.
+
+The fact that the magnitude of the imaginary components change does not bother me, since the amplitude is not
+normalized anyway.
+I updated the twst_suite with the new results.
+
+- I ran the test_suite for non-adiabatic tides with bsimp for the eigenfunctions.It takes a bit longer, but the output files are not THAT big and the results do not change significantly.
+
+- I got rid of the output files containing the unpermuted Riccati elements.
+
+- I got rid of the option of giving in input v3 and v7 in the non adiabatic + tides case.
+The values are now hardcoded. In any case, I am using single value decomposition to find the IC of the eigenfunctions, 
+so that part of code is not used.
+	- tested it on non adiabatic tidal eigenfunctions test_suite -->OK
+	- tested it on non adiabatic eigenfunctions test_suite -->OK
+	- tested it on non polytrope test_suite -->OK
+
+07/12/2013
+If I only look at the eigenfunctions from the fitting point to the surface, I do not spit out any output file related to the fit-center interval.
+This minimized the amount of output, and memory allocation.
+
+07/14/2013
+To avoid allocating too much memory when computing the eigenfunctions, I am not allocating anymore a chunck of memory to
+store the riccati elements and rkf45 state. Instead, I am allocating for each permutation interval only what's needed.
+This slows down the code, because for each permutation interval I have to loop through the files every time, which is time consuming.
+The previous version of the code is faster for regular stars, where I have no troubles in term of size of output files
+
+NOTE about comparing with the test suites of the code's previous version:
+- Politrope --> OK
+- non adiabatic eigenfunctions --> OK
+- non adiabatic tidal eigenfunctions --> the surface moves by a tiny little bit
+rkf45 = 9.9997238000084321e-01
+rkf45 = 9.9997237999584321e-01
+There must be a discrepancy when I store the surface properties with rkf45 in the two different cases. In any case, the results do not change significantly!
+
+
+07/16/13
+- Removed giving in input the output file address
+
+- Removed "onCluster" flag
+
+- removed refinement when bsimp is used. Just DO NOT USE bsimp
+
+- During the calculation of the eigenfunctions I interpolate the riccati elements. 
+To avoid having to scan gigantic files multiple times, I now store the various
+riccati components and integrator state (if rkf45 is used) in different files, one for each
+permutation interval. After I read each file and store its content in vectors, I clean it
+ (close it, open it again, and then close it).
+This way I am left with a train of blank files and the memory usage decreases as I am running...
+
+
+multiply the whole stellar model by 10^5
+forcing it to take exactly that timestep?
+moving the fitting point to the middle or outer turning point?
+increase dissipation introducing more variables??
+using steffen also to interpolate peaks in the stellar model??
+Look at variables entering the tidal problem for a normal star and a WD. What are the differences?
+
+
+08/01-02/2013
+
+- cleaning up the various warnings by defining NULL pointers
+- By default, the non-adiabatic eigenfrequencies use bsimp to integrate R
+- all the variables and matrices related only to find_permutation_with_minNorm have been moved inside the routine.
+- I added one routine to complete the Riccati matrix by simmetry
+- In the non adiabatic case, during the calculation of Rij, I am forcing everything to be symmetric. Meaning:
+	- right after the integrator I am forcing the second half of y_Riccati to respect the symmetry properties of R
+	- inside the integrator I am forcing R and dR to be symmetric.
+
+
+- During the calculation of the eigenfunctions, I was skipping permutations if fabs(csiRel-csi_final) < 1.0e-10. I commented that out	
+- only printing out half of the Riccati elements.
+
+08/20/2013
+
+- that didn't work out. Now the timescales are much cleaner, BUT I don't see any resonance, which is weird cause I am in the regime of the star's eigenfrequencies.
+- What I can do now is NOT to force symmetry, but instead I can read all riccati components and integrator state.
+I might be cumulating numerical noise, but the numerical noise is at the level of 1e-16, so unless I do 1e16 integrator steps, that shouldn't be a problem
+This might also mean that I need to go to long double to make sure I kill it all, at least in the integrator (think about it)
+The downside here is that my output will be bigger, so I can run less jobs.
+- all the riccati elements and elements in the integrator status are now read.
+
+
+
+09/04/2013
+
+- that didn't work out either, because I forgot to read all riccati elements when extracting them from the integrator state. 
+I was still using the simmetry properties of the Riccati matrix (this was in the routine computing_Rij_from_rkf45_state).
+I fixed that and I still had some spikes of noise in the non-adiabatic tidal eigenfunctions. 
+These are due to the fact that, during the calculation of Rij, CAFein doesn't permute when the norm has a maximum. 
+In the part of the code where I check whether the norm has a maximum I compare 3 consecutive elements ||R0||,  ||R1||, and  ||R2||.
+Specifically I was requesting  ||R1||- ||R0||>1e-12 and ||R1||- ||R2||>1e-12, which is dumb cause I am outside of the numerical noise and I don't permute where I should.
+Now I only request ||R1||>||R0|| and ||R1||>||R2||. Worse case, I permute even if I don't have a maximum, which is better than not permuting at all.
+I also changed the various normR to long double.
+
+I ran a test case and the issue is solved.
+
+
+09/13/2013
+With the WD I am barried in the numerical noise. Also, the Riccati matrices should have simmetry properties throughout the calculation.
+This is true for a regular stellar model, but it is not true for a WD --> the noise is kicking in.
+
+I tried rescaling the problem. I set the initial conditions on the Riccati elements such that:
+
+from U  = R*V to:
+1e10*U  = 1e10*R*V = 1e5*R*1e5*V.
+
+I then rescale my variables back at the end of the calculation when I am printing on file the tidal eigenfunctions.
+
+09/14/13
+
+The step above made no sense, cause I should modify the equations as well. 
+After meeting with Vicky, the way to go seems to be a change of variables to boost the boundary conditions at the surface above the numerical noise. 
+I introduced:
+
+PhiBoost = 4 PI rho R/g
+
+where all of the above are surface values (the density is very small).
+Then I define
+yi' = yi/PhiBoost
+
+where i = 3, 4, 7, 8. With this change of variables, the surface BC are modified.
+I introduced a new subroutine to use this change of variables in the surface boundary condition
+
+at the end of the calculation, before printing on file, I trasform back y3, y4, y7, and y8.
+Finally I normalize everything to have y_8=1 at the surface
+
+09/16/2013
+Fixed the issue of running not a max accuracy requirement. 
+During the calculation of the tidal eigenfunctions I was passing the surface limit when interpolating.
+Now I "fixed" it, even though it is more like a patch. I am stopping one radial step earlier.
+
+
+09/25/13 
+Added the actual surface surfaceRel to the boundary conditions at the star's surface.
+
+
+12/27/2013
+For the ZAMS star on the cluster, I had troubles during the calculation of the eigenfunctions at the end of the permutation interval. 
+I moved the boundary by a bit to avoid the problem. I should comment that line for the WD.
+
+8/25/2015
+- Setting the pressure as integration variable. Computation of tidal eigenfunctions for test case goes from 15 mins to 9 mins...
+- Claned up input file
+- starting integrations on grail. 
+WD DIDN'T IMPROVE!
+
+Quasi-adiabatic equations? From a quick google search it looks like ppl used it in the past for WDs.
+
+
+12/29/2015
+- I downloaded CAFein's version on Github and the test_suite cases were giving problems.
+- I fixed the version on my machine and the various test_cases work. 
+- I added a README_CAFein_how_to
+- I re-computed the polytrope model requiring resolutionMesh = 1.0e-4, not to create a gigantic input file.
+The file I had used so far had resolutionMesh = 5.0e-5.
