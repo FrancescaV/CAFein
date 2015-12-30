@@ -55,7 +55,7 @@ fig_height = fig_height_cm * inches_per_cm       # height in inches
 fig_size = [fig_width, fig_height]
 ##################################
 ##################################
-PSfile = plotsAddress+"Eigenfunctions_"+str(xmin)+"_to_"+str(xmax)+".pdf"
+PSfile = plotsAddress+"Non_adiabatic_tidal_eigenfunctions_"+str(xmin)+"_to_"+str(xmax)+".pdf"
 plt.close('all')
 fig, ((ax1yr, ax1yi), (ax2yr, ax2yi), (ax3yr, ax3yi), (ax4yr, ax4yi), (ax5yr, ax5yi), (ax6yr, ax6yi)) = plt.subplots(nrows=6, ncols=2, sharex = "all")
 fig.set_size_inches(fig_size)

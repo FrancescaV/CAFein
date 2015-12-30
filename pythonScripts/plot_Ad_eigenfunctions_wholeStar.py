@@ -55,7 +55,7 @@ fig_height = fig_height_cm * inches_per_cm       # height in inches
 fig_size = [fig_width, fig_height]
 ##################################
 ##################################
-PSfile = plotsAddress+"Eigenfunctions_"+str(xmin)+"_to_"+str(xmax)+".pdf"
+PSfile = plotsAddress+"Adiabatic_eigenfunctions_"+str(xmin)+"_to_"+str(xmax)+".pdf"
 plt.close('all')
 fig, ((ax1yr), (ax2yr), (ax3yr), (ax4yr)) = plt.subplots(nrows=4, ncols=1, sharex = "all")
 fig.set_size_inches(fig_size)

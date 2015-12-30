@@ -84,7 +84,7 @@ From CAFein's main folder type the following
 > cd pythonScripts
 > python plot_Ad_eigenfunctions_wholeStar.py
 
-This will create a PDF file in CAFein/output/plots called Eigenfunctions_0.0_to_1.1.pdf. 
+This will create a PDF file in CAFein/output/plots called Adiabatic_eigenfunctions_0.0_to_1.1.pdf. 
 In this PDF, the newly calculated (unnormalized) eigenfunctions for the the g5 mode are 
 plotted (in black) together with those contained in the test suite example 
 CAFein/input/test_suite/polytrope_n3_eigenfunctions/Output (in red). If the ran 
@@ -98,9 +98,9 @@ were successful these should overlap.
 This test_suite computes the non-adiabatic eigenfunctions of a 7Msun main sequence star
 at Z = 0.03. Specifically, it computes the p2 - eigenmode.
 
-From CAFein’s main folder, copy the relevant input files
+From CAFein’s input folder, copy the relevant input files
 
-> cd input
+> cd ../input
 > cp test_suite/non_adiabatic_eigenfunctions/acc_and_dim.dat .
 > cp test_suite/non_adiabatic_eigenfunctions/stellarModelFilesAddress.dat .
 
@@ -123,7 +123,7 @@ From CAFein's main folder type the following
 > cd pythonScripts
 > python plot_nonAd_eigenfunctions_wholeStar.py
 
-This will create a PDF file in CAFein/output/plots called Eigenfunctions_0.0_to_1.1.pdf. 
+This will create a PDF file in CAFein/output/plots called Non_adiabatic_eigenfunctions_0.0_to_1.1.pdf. 
 In this PDF the newly calculated (unnormalized) complex eigenfunctions are plotted (in black) 
 together with those contained in the test suite example CAFein/input/test_suite/non_adiabatic_eigenfunctions/Output (in red). 
 If the ran were successful these should overlap, at least in the real parts (left panels).
@@ -138,9 +138,9 @@ This test computes the tidal eigenfunctions for a 5Msun main sequence star with 
 The calculation is similar to the one presented in CAFein's instrument paper. 
 Details on the binary companion can be dig out of acc_and_dim.dat
 
-From CAFein’s main folder, copy the relevant input files
+From CAFein’s input folder, copy the relevant input files
 
-> cd input
+> cd ../input
 > cp test_suite/non_adiabatic_tidal_eigenfunctions/acc_and_dim.dat .
 > cp test_suite/non_adiabatic_tidal_eigenfunctions/stellarModelFilesAddress.dat .
 
@@ -162,7 +162,7 @@ From CAFein's main folder type the following
 > cd pythonScripts
 > python plot_nonAd_tidal_eigenfunctions_wholeStar.py
 
-This will create a PDF file in CAFein/output/plots called Eigenfunctions_0.0_to_1.01.pdf. 
+This will create a PDF file in CAFein/output/plots called Non_adiabatic_tidal_eigenfunctions_0.0_to_1.01.pdf. 
 In this PDF the newly calculated complex tidal eigenfunctions (normalized) are plotted (in black) 
 together with those contained in the test suite example CAFein/input/test_suite/non_adiabatic_tidal_eigenfunctions/Output (in red). 
 If the ran were successful these should overlap.
