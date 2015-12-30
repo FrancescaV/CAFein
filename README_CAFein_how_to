@@ -9,6 +9,9 @@
 Below I explain how to get the code, how to compile it, and how to run a few test cases. 
 Details can be found in CAFein’s instrument paper at http://arxiv.org/abs/1301.3197.
 I strongly recommend to read the paper first. 
+*** NOTE ***
+CAFein relies on the GNU Scientific Library (GSL). You must install those before going
+ahead.
 
 ************************************
 ************************************
