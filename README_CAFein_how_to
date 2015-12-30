@@ -6,7 +6,7 @@
 ***************************************************************************
 ***************************************************************************
 
-Below I explain how to get the code, compile it, and run a few test cases. 
+Below I explain how to get the code, how to compile it, and how to run a few test cases. 
 Details can be found in CAFein’s instrument paper at http://arxiv.org/abs/1301.3197.
 I strongly recommend to read the paper first. 
 
@@ -16,11 +16,11 @@ I strongly recommend to read the paper first.
 ************************************
 ************************************
 
-Go in the folder where you want CAFein to be and clone the github repository:
+Go to the folder where you want CAFein to be and clone the github repository:
 
 > git clone https://github.com/FrancescaV/CAFein
 
-Now you have the folder "CAFein". 
+Now you should have a folder named "CAFein". 
 
 ************************************
 ************************************
@@ -33,6 +33,14 @@ Now you have the folder "CAFein".
 > make
 
 The code should compile with a few warnings.
+If you get an error, it might come from the location of
+gsl libraries on your machine. If you are a NU Quest cluster user, 
+the Makefile to use is Makefile_cluster. So:
+
+> cp Makefile_cluster Makefile
+> module load gsl
+> module load gcc
+> make
 
 ************************************
 ************************************
@@ -45,40 +53,39 @@ The code should compile with a few warnings.
 ****        of a polytrope
 ************************************
 
-The test suite CAFein/input/test_suite/polytrope_n3_eigenfunctions 
-contains the input files to compute the l = 2 adiabatic eigenfunctions 
-of a polytrope with index n = 3. Specifically, it computes the 
-g5-eigenmode (see README.dat in the corresponding folder for more info).
+The test suite CAFein/input/test_suite/polytrope_n3_eigenfunctions contains 
+the input files to compute the l = 2 adiabatic eigenfunctions of a polytrope 
+with index n = 3. Specifically, it computes the g5-eigenmode.
 
-From CAFein’s main folder, copy relevant input files
+From CAFein’s main folder, copy the relevant input files
 
 > cd input
 > cp test_suite/polytrope_n3_eigenfunctions/acc_and_dim.dat .
 > cp test_suite/polytrope_n3_eigenfunctions/stellarModelFilesAddress.dat .
 
-Back to CAFein’s main folder, to run it
+Go back to CAFein’s main folder and run it
 
 > cd ..
 > ./CAFein
 
-It runs in about 10 seconds on my machine, printing "cazzo DONE" when DONE.
-
+The code runs in ~10 seconds on my machine, printing "cazzo DONE" when DONE.
 ************************************
-**** 3.1.1 — Plot the output
+**** 3.1.1 — Plotting the output
 ************************************
 
 The folder CAFein/pythonScripts contains python scripts useful to visualize 
-the data. Here we use plot_Ad_eigenfunctions_wholeStar.py, for adiabatic eigenfunctions. 
+the data. Here we use plot_Ad_eigenfunctions_wholeStar.py. 
 
-From CAFein's main folder:
+From CAFein's main folder type the following
 
 > cd pythonScripts
 > python plot_Ad_eigenfunctions_wholeStar.py
 
 This will create a PDF file in CAFein/output/plots called Eigenfunctions_0.0_to_1.1.pdf. 
-In this PDF the newly calculated (unnormalized) eigenfunctions for the the g5 mode are plotted (in black) 
-together with those contained in the test suite example CAFein/input/test_suite/polytrope_n3_eigenfunctions/Output (in red). 
-If the ran were successful these should look the same (they overlap).
+In this PDF, the newly calculated (unnormalized) eigenfunctions for the the g5 mode are 
+plotted (in black) together with those contained in the test suite example 
+CAFein/input/test_suite/polytrope_n3_eigenfunctions/Output (in red). If the ran 
+were successful these should overlap.
 
 ******************************************
 **** 3.2. — Non - adiabatic eigenfunctions
@@ -88,27 +95,27 @@ If the ran were successful these should look the same (they overlap).
 This test_suite computes the non-adiabatic eigenfunctions of a 7Msun main sequence star
 at Z = 0.03. Specifically, it computes the p2 - eigenmode.
 
-From CAFein’s main folder, copy relevant input files
+From CAFein’s main folder, copy the relevant input files
 
 > cd input
 > cp test_suite/non_adiabatic_eigenfunctions/acc_and_dim.dat .
 > cp test_suite/non_adiabatic_eigenfunctions/stellarModelFilesAddress.dat .
 
-Back to CAFein’s main folder, to run it
+Go back to CAFein’s main folder and run it
 
 > cd ..
 > ./CAFein
 
-It runs in about 7 minutes on my machine, printing "cazzo DONE" when DONE.
+The code runs in ~7 minutes on my machine, printing "cazzo DONE" when DONE.
 
 ************************************
-**** 3.2.1 — Plot the output
+**** 3.2.1 — Plotting the output
 ************************************
 
 The folder CAFein/pythonScripts contains python scripts useful to visualize 
-the data. Here we use plot_nonAd_eigenfunctions_wholeStar.py, for non - adiabatic eigenfunctions. 
+the data. Here we use plot_nonAd_eigenfunctions_wholeStar.py. 
 
-From CAFein's main folder:
+From CAFein's main folder type the following
 
 > cd pythonScripts
 > python plot_nonAd_eigenfunctions_wholeStar.py
@@ -116,8 +123,9 @@ From CAFein's main folder:
 This will create a PDF file in CAFein/output/plots called Eigenfunctions_0.0_to_1.1.pdf. 
 In this PDF the newly calculated (unnormalized) complex eigenfunctions are plotted (in black) 
 together with those contained in the test suite example CAFein/input/test_suite/non_adiabatic_eigenfunctions/Output (in red). 
-If the ran were successful these should look the same (they overlap).
-Note, the PDF shows the real and imaginary components on the left and right panels, respectively.
+If the ran were successful these should overlap, at least in the real parts (left panels).
+Any difference in the imaginary parts (right panels) should come from the fact that I am showing 
+unnormalized eigenfunctions.
 **************************************************
 **** 3.3. — Non - adiabatic tidal eigenfunctions
 ****        of a massive MS star
@@ -125,38 +133,36 @@ Note, the PDF shows the real and imaginary components on the left and right pane
 
 This test computes the tidal eigenfunctions for a 5Msun main sequence star with z = 0.018.
 The calculation is similar to the one presented in CAFein's instrument paper. 
-Details on the binary companion can be dig out from acc_and_dim.dat
+Details on the binary companion can be dig out of acc_and_dim.dat
 
-From CAFein’s main folder, copy relevant input files
+From CAFein’s main folder, copy the relevant input files
 
 > cd input
 > cp test_suite/non_adiabatic_tidal_eigenfunctions/acc_and_dim.dat .
 > cp test_suite/non_adiabatic_tidal_eigenfunctions/stellarModelFilesAddress.dat .
 
-Back to CAFein’s main folder, to run it
+Go back to CAFein’s main folder and run it
 
 > cd ..
 > ./CAFein
 
-It runs in about 15 minutes on my machine, printing "cazzo DONE" when DONE.
+The code runs in ~15 minutes on my machine, printing "cazzo DONE" when DONE.
 ************************************
-**** 3.3.1 — Plot the output
+**** 3.3.1 — Plotting the output
 ************************************
 
 The folder CAFein/pythonScripts contains python scripts useful to visualize 
-the data. Here we use plot_nonAd_tidal_eigenfunctions_wholeStar.py, for non - adiabatic, tidal eigenfunctions. 
+the data. Here we use plot_nonAd_tidal_eigenfunctions_wholeStar.py. 
 
-From CAFein's main folder:
+From CAFein's main folder type the following
 
 > cd pythonScripts
 > python plot_nonAd_tidal_eigenfunctions_wholeStar.py
 
 This will create a PDF file in CAFein/output/plots called Eigenfunctions_0.0_to_1.01.pdf. 
-In this PDF the newly calculated complex tidal eigenfunctions are plotted (in black) 
+In this PDF the newly calculated complex tidal eigenfunctions (normalized) are plotted (in black) 
 together with those contained in the test suite example CAFein/input/test_suite/non_adiabatic_tidal_eigenfunctions/Output (in red). 
-If the ran were successful these should look the same (they overlap).
-
-
+If the ran were successful these should overlap.
 ************************************
 ************************************
 **** 4) Useful notes
